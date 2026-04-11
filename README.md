@@ -21,9 +21,19 @@ sudo apt update && sudo apt install -y \
   npm 
 
 ```
+Clone the repo
+```bash
+git clone https://github.com/R0JSON/easy-selfhost
+cd easy-selfhost
+```
+
 Install rust
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+Install tauri
+```bash
+sudo npm install -g @tauri-apps/cli
 ```
 Run the app
 ```bash
