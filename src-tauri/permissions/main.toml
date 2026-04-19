@@ -1,0 +1,13 @@
+[default]
+description = "Default permissions for the app"
+permissions = ["allow-greet", "allow-deploy"]
+
+[[permission]]
+identifier = "allow-greet"
+description = "Allow the greet command"
+commands.allow = ["greet"]
+
+[[permission]]
+identifier = "allow-deploy"
+description = "Allow the deploy command"
+commands.allow = ["deploy"]

@@ -2,38 +2,96 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
+    <title>Easy Selfhost</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" src="/main.js" defer></script>
+    <style>
+      :root {
+        font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+      }
+    </style>
   </head>
 
-  <body>
-    <main class="container">
-      <h1>Welcome to Tauri</h1>
+  <body class="bg-gray-50 text-gray-900">
+    <main class="max-w-4xl mx-auto p-8">
+      <header class="mb-10 text-center">
+        <h1 class="text-4xl font-bold text-indigo-600 mb-2">Easy Selfhost</h1>
+        <p class="text-gray-600">Deploy open-source services to your NixOS server with ease.</p>
+      </header>
 
-      <div class="row">
-        <a href="https://tauri.app" target="_blank">
-          <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a
-          href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
-          target="_blank"
-        >
-          <img
-            src="/assets/javascript.svg"
-            class="logo vanilla"
-            alt="JavaScript logo"
-          />
-        </a>
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-6 border-b pb-2">Deployment Configuration</h2>
+        
+        <form id="deploy-form" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- SSH Settings -->
+            <div class="space-y-4">
+              <h3 class="font-medium text-gray-700">Server SSH Settings</h3>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Target IP</label>
+                <input type="text" id="target_ip" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="1.2.3.4">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">SSH User</label>
+                <input type="text" id="target_user" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="root">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Authorized SSH Key (Public)</label>
+                <textarea id="ssh_key" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" rows="3" placeholder="ssh-ed25519 ..."></textarea>
+              </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="space-y-4">
+              <h3 class="font-medium text-gray-700">System Settings</h3>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Hostname</label>
+                <input type="text" id="hostname" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="my-server">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Target Device</label>
+                <input type="text" id="target_device" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="/dev/sda">
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t pt-6">
+            <h3 class="font-medium text-gray-700 mb-4">Service: Nextcloud</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Nextcloud Domain</label>
+                <input type="text" id="nextcloud_hostname" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="cloud.example.com">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Admin Password</label>
+                <input type="password" id="admin_password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+              </div>
+              <div class="flex items-center space-x-3 mt-6">
+                <input type="checkbox" id="ssl_enable" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                <label class="text-sm font-medium text-gray-700">Enable SSL (Let's Encrypt)</label>
+              </div>
+              <div id="acme-email-container" class="hidden">
+                <label class="block text-sm font-medium text-gray-700">ACME Email</label>
+                <input type="email" id="acme_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="admin@example.com">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-6">
+            <button type="submit" id="deploy-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Deploy Now
+            </button>
+          </div>
+        </form>
       </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
+      <div id="status-container" class="mt-8 hidden">
+        <div class="bg-white shadow-md rounded-lg p-6 border-l-4" id="status-border">
+          <h3 class="text-lg font-medium mb-2" id="status-title">Deployment Status</h3>
+          <p id="status-msg" class="text-sm text-gray-600 whitespace-pre-wrap font-mono bg-gray-50 p-3 rounded mt-2"></p>
+        </div>
+      </div>
     </main>
   </body>
 </html>
