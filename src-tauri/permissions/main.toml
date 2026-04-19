@@ -1,6 +1,6 @@
 [default]
 description = "Default permissions for the app"
-permissions = ["allow-greet", "allow-deploy"]
+permissions = ["allow-greet", "allow-deploy", "allow-generate-ssh-key", "allow-check-deps", "allow-save-config", "allow-deploy-existing"]
 
 [[permission]]
 identifier = "allow-greet"
@@ -11,3 +11,23 @@ commands.allow = ["greet"]
 identifier = "allow-deploy"
 description = "Allow the deploy command"
 commands.allow = ["deploy"]
+
+[[permission]]
+identifier = "allow-generate-ssh-key"
+description = "Allow the generate_ssh_key command"
+commands.allow = ["generate_ssh_key"]
+
+[[permission]]
+identifier = "allow-check-deps"
+description = "Allow the check_dependencies command"
+commands.allow = ["check_dependencies"]
+
+[[permission]]
+identifier = "allow-save-config"
+description = "Allow the save_configuration command"
+commands.allow = ["save_configuration"]
+
+[[permission]]
+identifier = "allow-deploy-existing"
+description = "Allow the deploy_existing command"
+commands.allow = ["deploy_existing"]
