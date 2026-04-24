@@ -36,6 +36,34 @@ window.addEventListener("DOMContentLoaded", async () => {
   const progressLogs = document.querySelector("#progress-logs");
   const spinner = document.querySelector(".spinner");
 
+  // dark / light mode toggle
+  const themeToggle = document.querySelector("#theme-toggle");
+  const iconSun = document.querySelector("#icon-sun");
+  const iconMoon = document.querySelector("#icon-moon");
+  const html = document.documentElement;
+
+  function applyTheme(dark) {
+    if (dark) {
+      html.classList.add("dark");
+      iconSun.classList.remove("hidden");
+      iconMoon.classList.add("hidden");
+    } else {
+      html.classList.remove("dark");
+      iconSun.classList.add("hidden");
+      iconMoon.classList.remove("hidden");
+    }
+  }
+
+  //  saved preference
+  const savedTheme = localStorage.getItem("theme");
+  applyTheme(savedTheme === "dark");
+
+  themeToggle.addEventListener("click", () => {
+    const isDark = html.classList.contains("dark");
+    applyTheme(!isDark);
+    localStorage.setItem("theme", !isDark ? "dark" : "light");
+  });
+
   // Navigation Logic
   function showScreen(screen) {
     screenHome.classList.add("hidden");
