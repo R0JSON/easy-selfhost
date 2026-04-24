@@ -2,38 +2,256 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
+    <title>Easy Selfhost</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" src="/main.js" defer></script>
+    <style>
+      :root {
+        font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+      }
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #4f46e5;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
 
-  <body>
-    <main class="container">
-      <h1>Welcome to Tauri</h1>
+  <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+    <main class="max-w-4xl mx-auto p-8 flex-grow w-full">
+      <header class="mb-10 text-center">
+        <h1 class="text-4xl font-bold text-indigo-600 mb-2">Easy Selfhost</h1>
+        <p class="text-gray-600">Deploy open-source services to your NixOS server with ease.</p>
+      </header>
 
-      <div class="row">
-        <a href="https://tauri.app" target="_blank">
-          <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a
-          href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
-          target="_blank"
-        >
-          <img
-            src="/assets/javascript.svg"
-            class="logo vanilla"
-            alt="JavaScript logo"
-          />
-        </a>
+      <!-- Startup Dependency Check -->
+      <div id="deps-container" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 hidden">
+        <div class="flex">
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800">Missing Dependencies</h3>
+            <div class="mt-2 text-sm text-yellow-700">
+              <p id="deps-msg">Some required tools are missing on your system.</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
+      <!-- SCREEN 1: Home -->
+      <div id="screen-home" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white shadow-md rounded-lg p-8 text-center hover:shadow-lg transition-shadow cursor-pointer border border-transparent hover:border-indigo-500" id="btn-goto-create">
+            <svg class="mx-auto h-12 w-12 text-indigo-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <h3 class="text-xl font-semibold mb-2">Create New Configuration</h3>
+            <p class="text-gray-500">Configure Nix OS files and select services to deploy.</p>
+          </div>
+          <div class="bg-white shadow-md rounded-lg p-8 text-center hover:shadow-lg transition-shadow cursor-pointer border border-transparent hover:border-indigo-500" id="btn-goto-deploy">
+            <svg class="mx-auto h-12 w-12 text-indigo-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <h3 class="text-xl font-semibold mb-2">Deploy Configuration</h3>
+            <p class="text-gray-500">Deploy an existing Nix flake to your server.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 2: Configuration (Step 1) -->
+      <div id="screen-config" class="bg-white shadow-md rounded-lg p-6 hidden">
+        <div class="flex items-center justify-between mb-6 border-b pb-4">
+          <div class="flex items-center">
+            <button type="button" class="btn-back text-indigo-600 hover:text-indigo-800 mr-4 font-medium">&larr; Home</button>
+            <h2 class="text-xl font-semibold">Step 1: Configuration</h2>
+          </div>
+        </div>
+        
+        <form id="config-form" class="space-y-6">
+          <div class="space-y-4">
+            <h3 class="font-medium text-gray-700">System Settings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Hostname</label>
+                <input type="text" id="hostname" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="my-server">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Target Device</label>
+                <input type="text" id="target_device" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="/dev/sda">
+              </div>
+              <div class="md:col-span-2">
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-sm font-medium text-gray-700">Authorized SSH Key (Public)</label>
+                  <button type="button" id="generate-key-btn" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Generate New Key</button>
+                </div>
+                <textarea id="ssh_key" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" rows="2" placeholder="ssh-ed25519 ..."></textarea>
+                <p id="key-gen-msg" class="text-xs text-green-600 hidden mt-1"></p>
+                <input type="hidden" id="ssh_identity_file">
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t pt-6">
+            <h3 class="font-medium text-gray-700 mb-4">Services</h3>
+            
+            <div class="space-y-4">
+              <!-- Nextcloud Service -->
+              <div class="p-4 border rounded-md">
+                <div class="flex items-center mb-2">
+                  <input type="checkbox" id="svc_nextcloud" checked disabled class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">Nextcloud (Required)</label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Nextcloud Domain</label>
+                    <input type="text" id="nextcloud_hostname" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="cloud.example.com">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Admin Password</label>
+                    <input type="password" id="admin_password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
+                  </div>
+                  <div class="flex items-center space-x-3 mt-4 md:col-span-2">
+                    <input type="checkbox" id="ssl_enable" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label class="text-sm font-medium text-gray-700">Enable SSL (Let's Encrypt)</label>
+                  </div>
+                  <div id="acme-email-container" class="hidden md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">ACME Email</label>
+                    <input type="email" id="acme_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="admin@example.com">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mock Services -->
+              <div class="p-4 border rounded-md bg-gray-50 opacity-75">
+                <div class="flex items-center">
+                  <input type="checkbox" id="svc_jellyfin" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">Jellyfin (Mock)</label>
+                </div>
+              </div>
+              <div class="p-4 border rounded-md bg-gray-50 opacity-75">
+                <div class="flex items-center">
+                  <input type="checkbox" id="svc_vaultwarden" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">Vaultwarden (Mock)</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-6 border-t">
+            <button type="button" id="save-config-btn" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Save Configuration
+            </button>
+            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Next: Deploy &rarr;
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SCREEN 3: Deployment Target (Step 2) -->
+      <div id="screen-deploy-target" class="bg-white shadow-md rounded-lg p-6 hidden">
+        <div class="flex items-center justify-between mb-6 border-b pb-4">
+          <div class="flex items-center">
+            <button type="button" id="btn-back-config" class="text-indigo-600 hover:text-indigo-800 mr-4 font-medium">&larr; Back to Configuration</button>
+            <h2 class="text-xl font-semibold">Step 2: Deployment Target</h2>
+          </div>
+        </div>
+        
+        <form id="deploy-target-form" class="space-y-6">
+          <div class="space-y-4">
+            <h3 class="font-medium text-gray-700">Server Connection Settings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Target IP</label>
+                <input type="text" id="target_ip" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="1.2.3.4">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">SSH User</label>
+                <input type="text" id="target_user" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="root">
+              </div>
+            </div>
+            <p class="text-sm text-gray-500">The SSH identity file (private key) will be automatically loaded if you generated a new key in the previous step.</p>
+          </div>
+
+          <div class="flex justify-end pt-6 border-t">
+            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Deploy Now
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SCREEN 4: Deploy Existing Configuration -->
+      <div id="screen-deploy-existing" class="bg-white shadow-md rounded-lg p-6 hidden">
+        <div class="flex items-center mb-6 border-b pb-2">
+          <button type="button" class="btn-back text-indigo-600 hover:text-indigo-800 mr-4 font-medium">&larr; Home</button>
+          <h2 class="text-xl font-semibold">Deploy Existing Configuration</h2>
+        </div>
+        
+        <form id="deploy-existing-form" class="space-y-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Nix Flake Directory</label>
+              <div class="mt-1 flex rounded-md shadow-sm">
+                <input type="text" id="flake_dir" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md sm:text-sm border-gray-300 border" readonly placeholder="Select directory...">
+                <button type="button" id="pick-dir-btn" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm hover:bg-gray-100">
+                  Browse
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Target IP</label>
+                <input type="text" id="existing_target_ip" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="1.2.3.4">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">SSH User</label>
+                <input type="text" id="existing_target_user" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="root">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">SSH Identity File (Private Key)</label>
+                <input type="text" id="existing_ssh_identity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="/path/to/private/key (optional)">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Nextcloud Admin Password (Optional)</label>
+                <input type="password" id="existing_admin_pwd" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Leave empty if not deploying Nextcloud">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-6 border-t">
+            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Deploy
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SCREEN 5: Deployment Progress View -->
+      <div id="screen-deploy-progress" class="bg-white shadow-md rounded-lg p-6 hidden flex-grow flex flex-col">
+        <div class="flex items-center justify-between mb-6 border-b pb-4">
+          <h2 class="text-xl font-semibold" id="progress-title">Deployment in Progress</h2>
+          <button type="button" id="btn-back-home-progress" class="hidden text-indigo-600 hover:text-indigo-800 font-medium">&larr; Return to Home</button>
+        </div>
+
+        <div class="flex items-center justify-center py-8" id="progress-indicator">
+          <div class="spinner mr-4"></div>
+          <p class="text-lg text-gray-600 font-medium" id="progress-status-text">Executing nixos-anywhere...</p>
+        </div>
+
+        <div class="mt-4 flex-grow flex flex-col">
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Logs</h3>
+          <div class="bg-gray-900 text-gray-100 font-mono text-sm p-4 rounded-md flex-grow overflow-y-auto max-h-96 whitespace-pre-wrap" id="progress-logs">Waiting for output...</div>
+        </div>
+      </div>
+
     </main>
   </body>
 </html>

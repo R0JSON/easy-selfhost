@@ -1,0 +1,49 @@
+Temat projektu: Cybersuwerennośća
+Cel projektu: omówić zagadnienie oraz stworzyć aplikację obniżającą próg wejścia do wdrażania otwarto-źródłowych usług serwerowych (typu NextCloud)
+Tło projektu – motywacja: do uzupełnienia
+Założenie projektowe: użytkownik ma instancję systemu operacyjnego Linux (chmura, wirtualna, niewirtualna) z dostępem przez SSH, aplikacja desktop-owa
+Technologia aplikacji:  
+Zakres projektu:
+------------------------------------------------------------------------------------------------------------------------
+    • M — MUST – (musi być): wymagania krytyczne, które muszą być spełnione (bez niego dany produkt nie zadziała/nie spełni założeń).
+    • S – SHOULD (powinien być): wymagania o wysokim priorytecie – chcemy realizować.
+    • C – COULD (może być): wymagania, które zostaną zrealizowane, jeżeli pozwoli na to czas.
+    • W – WON’T (nie w zakresie): wymagania obecnie nierealizowane - możliwe rozszerzenia w przyszłości.
+------------------------------------------------------------------------------------------------------------------------
+    • MUST - aplikacja: automatyzacja wdrażania 3 usług, intuicyjny (niski próg wejścia) interfejs, aplikacja ze wsparciem Linux-a
+    • MUST - research: definicja cybersuwerenności + research literatury naukowej nt. cybersuwerenności,  research oprogramowania i produktów open-source lub europejskich zastępujących komercyjne
+    • SHOULD - aplikacja: wsparcie wdrażania wielu usług, bezpieczne wdrażanie usług – podstawowy hardening usług + systemu operacyjnego (automatyczny przy wdrażaniu), instrukcja tłumacząca aplikację i parametry wdrażanych usług (najlepiej zawrzeć ją w interfejsie np. ikona „?”)
+    • SHOULD – research: research artykułów (ciekawych news-ów) nt. cybersuwerenności
+    • COULD - aplikacja: wsparcie wdrażania wielu usług na jednej instancji, aplikacja ze wsparciem innych systemów operacyjnych (MacOS, Windows)
+    • COULD – research: _
+    • WON’T – aplikacja: automatyzacja konfiguracji infrastruktury chmurowej dla usług (Terraform), wsparcie AI w wyborze parametrów aplikacji
+    • WON’T – research:  _
+Deadline 9 czerwca
+Kamienie milowe (można szybciej kończyć): 28 kwietnia – realizacja MUST, 19 maj – realizacja SHOULD, 2 czerwiec (ewent. do 9 czerwca) – realizacja COULD
+Zadania:
+    • Wymyślenie tematu i koncepcji aplikacji – 2 tydzień marca → Wiktor, Paweł
+    • Przetestowanie koncepcji aplikacji – 3-4 tydzień marca → Wiktor, Dawid, Vitalii, Michał
+    • Ustalenie zakresu projektu, przygotowanie zadań – 4 tydzień marca → Paweł
+1. kamień milowy
+    • Stworzenie repozytorium oraz szablonu aplikacji (gdzie później można równocześnie pracować) + wytłumaczenie szablonu całej grupie – 7.04 (lepiej szybciej) → Wiktor
+    • Stworzenie backendu (wykonywanie komend, ssh, obsługa GUI) – 24.04 → Wiktor, Dawid, Vitalii
+    • Przygotowanie plików configuration.nix dla 3 usług open-source i przetestowanie tak wdrożonych usług – 21.04 → Dawid, Witek
+    • Przygotowanie intuicyjnego interfejsu – frontend – 24.04 → Michał, Ania
+    • Stworzenie pliku instalacyjnego dla aplikacji – 28.04 → Wiktor
+    • Przegląd kodu (uporządkowanie) + testowanie aplikacji i naprawa błędów – 28.04 → Dawid, Vitalii, Ania, Michał, Witold
+	---------------------------------------------------------------------------------------------------------------
+    • Zdefiniowanie cybersuwerenności + research literatury naukowej nt. cybersuwerenności – 28.04 → Ania, Witek
+    • Research oprogramowania i produktów open-source lub europejskich zastępujących komercyjne – 28.04 → Ania, Witek
+2. kamień milowy
+    • Rozwijanie frontendu i backendu w ramach nowych funkcjonalności – 17.05 → Wiktor, Vitalii, Ania, Michał, Witold
+    • Przygotowanie plików configuration.nix dla dodatkowych usług open-source i przetestowanie tak wdrożonych usług – 10.05 → Dawid, Witek
+    • Research i przygotowanie plików configuration.nix, które dodatkowo zabezpieczają odpowiednio usługi i system operacyjny (hardening) oraz przetestowanie tak wdrożonych usług – 15.05 → Dawid, Witek
+    • Przygotowanie instrukcji do aplikacji, tłumaczącej parametry wdrażanych usług – najlepiej zawrzeć w interfejsie (np. ikona „?”) – 15.05 → Michał, Ania
+    • Przegląd kodu (uporządkowanie) + testowanie aplikacji i naprawa błędów – 19.05 → Dawid, Vitalii, Ania, Michał, Witold
+      ---------------------------------------------------------------------------------------------------------------
+    • Research artykułów (ciekawych news-ów) nt. cybersuwerenności – 19.05 → Ania, Witek, Paweł
+3. kamień milowy
+    • Przygotowanie plików configuration.nix, które wdrażają wiele usług na jednej instancji oraz przetestowanie tak wdrożonych usług – 26.05 → Dawid, Witek
+    • Research nt. rozszerzenia wsparcia aplikacji na inne systemy operacyjne (MacOS, Windows) + omówienie z grupą, wraz z podziałem zadań – 26.05 → Wiktor, Ania
+    • Rozwijanie frontendu i backendu w ramach nowych funkcjonalności – 31.05 → Wiktor, Vitalii, Ania, Michał, Witold
+    • Przegląd kodu (uporządkowanie) + testowanie aplikacji i naprawa błędów – 02.06 → Dawid, Vitalii, Ania, Michał, Witold
