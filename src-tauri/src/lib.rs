@@ -6,16 +6,36 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 struct DeployConfig {
+    // Connection
     target_ip: String,
     target_user: String,
+
+    // System
     hostname: String,
     ssh_key: String,
     target_device: String,
+
+    // Nextcloud (always enabled)
     nextcloud_hostname: String,
     admin_password: String,
     ssl_enable: bool,
     acme_email: String,
+
+    // SSH identity
     ssh_identity_file: Option<String>,
+
+    // Jellyfin
+    jellyfin_enable: bool,
+    jellyfin_hostname: Option<String>,
+    jellyfin_media_dir: Option<String>,
+    jellyfin_open_firewall: Option<bool>,
+
+    // Vaultwarden
+    vaultwarden_enable: bool,
+    vaultwarden_hostname: Option<String>,
+    vaultwarden_port: Option<u16>,
+    vaultwarden_admin_token: Option<String>,
+    vaultwarden_signups_allowed: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -112,12 +132,41 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
         "".to_string()
     };
 
+    // Jellyfin block
+    let jellyfin_block = if config.jellyfin_enable {
+        let hostname = config.jellyfin_hostname.as_deref().unwrap_or("");
+        let media_dir = config.jellyfin_media_dir.as_deref().unwrap_or("");
+        let open_fw = config.jellyfin_open_firewall.unwrap_or(false);
+        format!(
+            "services.jellyfin = {{ enable = true; openFirewall = {}; dataDir = \"{}\"; hostName = \"{}\"; }};",
+            if open_fw { "true" } else { "false" },
+            media_dir,
+            hostname
+        )
+    } else {
+        "".to_string()
+    };
+
+    // Vaultwarden block
+    let vaultwarden_enable = if config.vaultwarden_enable {"true"} else {"false"};
+    let vaultwarden_hostname = config.vaultwarden_hostname.as_deref().unwrap_or("");
+    let vaultwarden_port = config.vaultwarden_port.map(|p| p.to_string()).unwrap_or_else(|| "80".to_string());
+    let vaultwarden_admin_token = config.vaultwarden_admin_token.as_deref().unwrap_or("");
+    let vaultwarden_signups = if config.vaultwarden_signups_allowed.unwrap_or(false) {"true"} else {"false"};
+    
+
     let configuration = include_str!("../nix/configuration.nix")
         .replace("{{ hostname }}", &config.hostname)
         .replace("{{ ssh_key }}", &config.ssh_key)
         .replace("{{ nextcloud_hostname }}", &config.nextcloud_hostname)
         .replace("{{ ssl_enable }}", ssl_enable_str)
-        .replace("{{ acme_config }}", &acme_config);
+        .replace("{{ acme_config }}", &acme_config)
+        .replace("{{ jellyfin_block }}", &jellyfin_block)
+        .replace("{{ vaultwarden_enable }}", vaultwarden_enable)
+        .replace("{{ vaultwarden_hostname }}", vaultwarden_hostname)
+        .replace("{{ vaultwarden_signups }}", vaultwarden_signups)
+        .replace("{{ vaultwarden_port }}", &vaultwarden_port)
+        ;
     fs::write(deploy_dir.join("configuration.nix"), configuration).map_err(|e| e.to_string())?;
 
     // Generate flake.nix
