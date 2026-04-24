@@ -36,6 +36,34 @@ window.addEventListener("DOMContentLoaded", async () => {
   const progressLogs = document.querySelector("#progress-logs");
   const spinner = document.querySelector(".spinner");
 
+  // dark / light mode toggle
+  const themeToggle = document.querySelector("#theme-toggle");
+  const iconSun = document.querySelector("#icon-sun");
+  const iconMoon = document.querySelector("#icon-moon");
+  const html = document.documentElement;
+
+  function applyTheme(dark) {
+    if (dark) {
+      html.classList.add("dark");
+      iconSun.classList.remove("hidden");
+      iconMoon.classList.add("hidden");
+    } else {
+      html.classList.remove("dark");
+      iconSun.classList.add("hidden");
+      iconMoon.classList.remove("hidden");
+    }
+  }
+
+  //  saved preference
+  const savedTheme = localStorage.getItem("theme");
+  applyTheme(savedTheme === "dark");
+
+  themeToggle.addEventListener("click", () => {
+    const isDark = html.classList.contains("dark");
+    applyTheme(!isDark);
+    localStorage.setItem("theme", !isDark ? "dark" : "light");
+  });
+
   // Navigation Logic
   function showScreen(screen) {
     screenHome.classList.add("hidden");
@@ -63,6 +91,32 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Service toggle logic: show/hide config panels when checkboxes are toggled
+  function setupServiceToggle(checkboxId, configPanelId, requiredFieldIds = []) {
+    const checkbox = document.querySelector(`#${checkboxId}`);
+    const panel = document.querySelector(`#${configPanelId}`);
+    if (!checkbox || !panel) return;
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        panel.classList.add("active");
+        requiredFieldIds.forEach(id => {
+          const el = document.querySelector(`#${id}`);
+          if (el) el.required = true;
+        });
+      } else {
+        panel.classList.remove("active");
+        requiredFieldIds.forEach(id => {
+          const el = document.querySelector(`#${id}`);
+          if (el) el.required = false;
+        });
+      }
+    });
+  }
+
+  setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_hostname", "jellyfin_media_dir"]);
+  setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_hostname"]);
+
   // SSH Key Generation
   const generateKeyBtn = document.querySelector("#generate-key-btn");
   const sshKeyArea = document.querySelector("#ssh_key");
@@ -84,6 +138,19 @@ window.addEventListener("DOMContentLoaded", async () => {
       generateKeyBtn.disabled = false;
       generateKeyBtn.textContent = "Generate New Key";
     }
+  });
+
+  // Vaultwarden admin token generator
+  const generateVwTokenBtn = document.querySelector("#generate-vw-token-btn");
+  const vwTokenInput = document.querySelector("#vaultwarden_admin_token");
+
+  generateVwTokenBtn.addEventListener("click", () => {
+    // Generate a random 48-char hex token without calling backend
+    const array = new Uint8Array(24);
+    crypto.getRandomValues(array);
+    vwTokenInput.value = Array.from(array).map(b => b.toString(16).padStart(2, "0")).join("");
+    vwTokenInput.type = "text";
+    setTimeout(() => { vwTokenInput.type = "password"; }, 3000);
   });
 
   // Check Dependencies on Startup
@@ -109,17 +176,41 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Get Config from Form
   function getCreateConfig() {
+    const jellyfinEnabled = document.querySelector("#svc_jellyfin").checked;
+    const vaultwardenEnabled = document.querySelector("#svc_vaultwarden").checked;
+
     return {
+      // Connection (filled in step 2)
       target_ip: document.querySelector("#target_ip")?.value || "",
       target_user: document.querySelector("#target_user")?.value || "",
+
+      // System
       hostname: document.querySelector("#hostname").value,
       ssh_key: document.querySelector("#ssh_key").value,
       target_device: document.querySelector("#target_device").value,
+
+      // Nextcloud (always enabled)
       nextcloud_hostname: document.querySelector("#nextcloud_hostname").value,
       admin_password: document.querySelector("#admin_password").value,
       ssl_enable: document.querySelector("#ssl_enable").checked,
       acme_email: document.querySelector("#acme_email").value,
+
+      // SSH identity
       ssh_identity_file: sshIdentityInput.value || null,
+
+      // Jellyfin
+      jellyfin_enable: jellyfinEnabled,
+      jellyfin_hostname: jellyfinEnabled ? document.querySelector("#jellyfin_hostname").value : null,
+      jellyfin_media_dir: jellyfinEnabled ? document.querySelector("#jellyfin_media_dir").value : null,
+      //jellyfin_hw_accel: jellyfinEnabled ? document.querySelector("#jellyfin_hw_accel").value : null,
+      jellyfin_open_firewall: jellyfinEnabled ? document.querySelector("#jellyfin_open_firewall").checked : false,
+
+      // Vaultwarden
+      vaultwarden_enable: vaultwardenEnabled,
+      vaultwarden_hostname: vaultwardenEnabled ? document.querySelector("#vaultwarden_hostname").value : null,
+      vaultwarden_port: vaultwardenEnabled ? parseInt(document.querySelector("#vaultwarden_port").value, 10) : null,
+      vaultwarden_admin_token: vaultwardenEnabled ? (document.querySelector("#vaultwarden_admin_token").value || null) : null,
+      vaultwarden_signups_allowed: vaultwardenEnabled ? document.querySelector("#vaultwarden_signups").checked : false,
     };
   }
 
@@ -156,7 +247,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     e.preventDefault();
     const config = getCreateConfig();
 
-    initProgressScreen("Deploying Configuration...", "Generating Nix files and starting nixos-anywhere...");
+    const services = ["Nextcloud"];
+    if (config.jellyfin_enable) services.push("Jellyfin");
+    if (config.vaultwarden_enable) services.push("Vaultwarden");
+
+    initProgressScreen(
+      `Deploying Configuration (${services.join(", ")})...`,
+      "Generating Nix files and starting nixos-anywhere..."
+    );
 
     try {
       const result = await invoke("deploy", { config });
