@@ -201,8 +201,9 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
     fs::write(extra_files_dir.join("nextcloud-admin-pass"), &config.admin_password).map_err(|e| e.to_string())?;
 
     // Run nixos-anywhere
-    let mut cmd = Command::new("nix");
-    cmd.arg("--extra-experimental-features")
+    let mut cmd = Command::new("pkexec");
+    cmd.arg("nix")
+       .arg("--extra-experimental-features")
        .arg("nix-command flakes")
        .arg("run")
        .arg("github:nix-community/nixos-anywhere")
@@ -242,9 +243,9 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
 #[tauri::command]
 async fn deploy_existing(config: ExistingDeployConfig) -> Result<DeployResult, String> {
     let deploy_dir = PathBuf::from(config.flake_dir);
-    
-    let mut cmd = Command::new("nix");
-    cmd.arg("--extra-experimental-features")
+    let mut cmd = Command::new("pkexec");
+    cmd.arg("nix")
+       .arg("--extra-experimental-features")
        .arg("nix-command flakes")
        .arg("run")
        .arg("github:nix-community/nixos-anywhere")
