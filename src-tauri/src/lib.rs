@@ -138,10 +138,9 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
         let media_dir = config.jellyfin_media_dir.as_deref().unwrap_or("");
         let open_fw = config.jellyfin_open_firewall.unwrap_or(false);
         format!(
-            "services.jellyfin = {{ enable = true; openFirewall = {}; dataDir = \"{}\"; hostName = \"{}\"; }};",
+            "services.jellyfin = {{ enable = true; openFirewall = {}; dataDir = \"{}\"; }};",
             if open_fw { "true" } else { "false" },
-            media_dir,
-            hostname
+            media_dir
         )
     } else {
         "".to_string()
@@ -201,17 +200,19 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
     fs::write(extra_files_dir.join("nextcloud-admin-pass"), &config.admin_password).map_err(|e| e.to_string())?;
 
     // Run nixos-anywhere
-    let mut cmd = Command::new("pkexec");
-    cmd.arg("nix")
-       .arg("--extra-experimental-features")
-       .arg("nix-command flakes")
-       .arg("run")
-       .arg("github:nix-community/nixos-anywhere")
-       .arg("--")
-       .arg("--flake")
-       .arg(format!(".#{}", config.hostname))
-       .arg("--extra-files")
-       .arg("extra-files");
+     let mut cmd = Command::new("pkexec");
+     let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
+     let flake_arg = format!("{}#{}", flake_path.display(), config.hostname);
+     cmd.arg("nix")
+         .arg("--extra-experimental-features")
+         .arg("nix-command flakes")
+         .arg("run")
+         .arg("github:nix-community/nixos-anywhere")
+         .arg("--")
+         .arg("--flake")
+         .arg(flake_arg)
+         .arg("--extra-files")
+         .arg("extra-files");
 
     if let Some(ref identity) = config.ssh_identity_file {
         cmd.arg("-i").arg(identity);
@@ -219,7 +220,7 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
 
     cmd.arg("--target-host")
        .arg(format!("{}@{}", config.target_user, config.target_ip));
-
+    println!("{:?}", deploy_dir);
     let output = cmd
         .current_dir(&deploy_dir)
         .output()
@@ -242,16 +243,18 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
 
 #[tauri::command]
 async fn deploy_existing(config: ExistingDeployConfig) -> Result<DeployResult, String> {
-    let deploy_dir = PathBuf::from(config.flake_dir);
-    let mut cmd = Command::new("pkexec");
-    cmd.arg("nix")
-       .arg("--extra-experimental-features")
-       .arg("nix-command flakes")
-       .arg("run")
-       .arg("github:nix-community/nixos-anywhere")
-       .arg("--")
-       .arg("--flake")
-       .arg(".#"); // Assumes default nixosConfigurations in the flake
+    let deploy_dir = PathBuf::from("/home/kali/.local/share/com.dreamteam.easy-selfhost/deploy");
+     let mut cmd = Command::new("pkexec");
+     let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
+     let flake_arg = format!("{}#", flake_path.display());
+     cmd.arg("nix")
+         .arg("--extra-experimental-features")
+         .arg("nix-command flakes")
+         .arg("run")
+         .arg("github:nix-community/nixos-anywhere")
+         .arg("--")
+         .arg("--flake")
+         .arg(flake_arg);
 
     // Optional extra-files if admin_password was provided
     if let Some(pwd) = config.admin_password {
