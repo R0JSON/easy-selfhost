@@ -159,6 +159,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     const missing = [];
     if (!deps.nix) missing.push("nix");
     if (!deps.ssh) missing.push("ssh");
+    if (!deps.sshpass) missing.push("sshpass");
+    if (!deps.cpio) missing.push("cpio");
 
     if (missing.length > 0) {
       depsMsg.textContent = `Missing required tools: ${missing.join(", ")}. Please install them.`;
@@ -197,6 +199,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
       // SSH identity
       ssh_identity_file: sshIdentityInput.value || null,
+      ssh_password: document.querySelector("#ssh_password").value || null,
 
       // Jellyfin
       jellyfin_enable: jellyfinEnabled,
@@ -319,6 +322,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       target_ip: document.querySelector("#existing_target_ip").value,
       target_user: document.querySelector("#existing_target_user").value,
       ssh_identity_file: document.querySelector("#existing_ssh_identity").value || null,
+      ssh_password: document.querySelector("#existing_ssh_password").value || null,
       admin_password: document.querySelector("#existing_admin_pwd").value || null,
     };
 

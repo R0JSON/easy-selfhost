@@ -1,7 +1,7 @@
 use std::process::Command;
 use std::fs;
 use std::path::PathBuf;
-use tauri::{AppHandle, Manager};
+use tauri::Manager;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -23,6 +23,7 @@ struct DeployConfig {
 
     // SSH identity
     ssh_identity_file: Option<String>,
+    ssh_password: Option<String>,
 
     // Jellyfin
     jellyfin_enable: bool,
@@ -44,6 +45,7 @@ struct ExistingDeployConfig {
     target_ip: String,
     target_user: String,
     ssh_identity_file: Option<String>,
+    ssh_password: Option<String>,
     admin_password: Option<String>, // optional for existing configs
 }
 
@@ -63,16 +65,22 @@ struct SshKeyResult {
 struct DependenciesResult {
     nix: bool,
     ssh: bool,
+    sshpass: bool,
+    cpio: bool,
 }
 
 #[tauri::command]
 async fn check_dependencies() -> DependenciesResult {
     let nix = Command::new("nix").arg("--version").output().is_ok();
     let ssh = Command::new("ssh").arg("-V").output().is_ok();
+    let sshpass = Command::new("sshpass").arg("-V").output().is_ok();
+    let cpio = Command::new("cpio").arg("--version").output().is_ok();
 
     DependenciesResult {
         nix,
         ssh,
+        sshpass,
+        cpio,
     }
 }
 
@@ -134,7 +142,7 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
 
     // Jellyfin block
     let jellyfin_block = if config.jellyfin_enable {
-        let hostname = config.jellyfin_hostname.as_deref().unwrap_or("");
+        let _hostname = config.jellyfin_hostname.as_deref().unwrap_or("");
         let media_dir = config.jellyfin_media_dir.as_deref().unwrap_or("");
         let open_fw = config.jellyfin_open_firewall.unwrap_or(false);
         format!(
@@ -150,7 +158,7 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
     let vaultwarden_enable = if config.vaultwarden_enable {"true"} else {"false"};
     let vaultwarden_hostname = config.vaultwarden_hostname.as_deref().unwrap_or("");
     let vaultwarden_port = config.vaultwarden_port.map(|p| p.to_string()).unwrap_or_else(|| "80".to_string());
-    let vaultwarden_admin_token = config.vaultwarden_admin_token.as_deref().unwrap_or("");
+    let _vaultwarden_admin_token = config.vaultwarden_admin_token.as_deref().unwrap_or("");
     let vaultwarden_signups = if config.vaultwarden_signups_allowed.unwrap_or(false) {"true"} else {"false"};
     
 
@@ -187,12 +195,52 @@ async fn save_configuration(_app: tauri::AppHandle, config: DeployConfig, save_p
     })
 }
 
+async fn run_ssh_copy_id(
+    target_user: &str,
+    target_ip: &str,
+    ssh_password: Option<&str>,
+    ssh_identity_file: Option<&str>,
+) -> Result<(), String> {
+    if let Some(password) = ssh_password {
+        let mut cmd = Command::new("sshpass");
+        cmd.env("SSHPASS", password)
+            .arg("-e")
+            .arg("ssh-copy-id")
+            .arg("-o")
+            .arg("StrictHostKeyChecking=no");
+
+        if let Some(identity) = ssh_identity_file {
+            cmd.arg("-i").arg(identity);
+        }
+
+        cmd.arg(format!("{}@{}", target_user, target_ip));
+
+        let output = cmd.output().map_err(|e| format!("Failed to execute sshpass ssh-copy-id: {}", e))?;
+        if !output.status.success() {
+            return Err(format!(
+                "ssh-copy-id failed: {}\n{}",
+                String::from_utf8_lossy(&output.stderr),
+                String::from_utf8_lossy(&output.stdout)
+            ));
+        }
+    }
+    Ok(())
+}
+
 #[tauri::command]
 async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployResult, String> {
     let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let deploy_dir = app_dir.join("deploy");
     
     generate_nix_files(&deploy_dir, &config)?;
+
+    // Copy SSH key if password is provided
+    run_ssh_copy_id(
+        &config.target_user,
+        &config.target_ip,
+        config.ssh_password.as_deref(),
+        config.ssh_identity_file.as_deref(),
+    ).await?;
 
     // Generate admin password file for extra-files
     let extra_files_dir = deploy_dir.join("extra-files/etc");
@@ -203,7 +251,13 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
      let mut cmd = Command::new("pkexec");
      let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
      let flake_arg = format!("{}#{}", flake_path.display(), config.hostname);
-     cmd.arg("nix")
+     
+     let path_env = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
+     let combined_path = format!("{}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", path_env);
+     
+     cmd.arg("/usr/bin/env")
+         .arg(format!("PATH={}", combined_path))
+         .arg("nix")
          .arg("--extra-experimental-features")
          .arg("nix-command flakes")
          .arg("run")
@@ -212,7 +266,7 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
          .arg("--flake")
          .arg(flake_arg)
          .arg("--extra-files")
-         .arg("extra-files");
+         .arg(deploy_dir.join("extra-files"));
 
     if let Some(ref identity) = config.ssh_identity_file {
         cmd.arg("-i").arg(identity);
@@ -243,11 +297,26 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
 
 #[tauri::command]
 async fn deploy_existing(config: ExistingDeployConfig) -> Result<DeployResult, String> {
-    let deploy_dir = PathBuf::from("/home/kali/.local/share/com.dreamteam.easy-selfhost/deploy");
+    let deploy_dir = PathBuf::from(&config.flake_dir);
+    
+    // Copy SSH key if password is provided
+    run_ssh_copy_id(
+        &config.target_user,
+        &config.target_ip,
+        config.ssh_password.as_deref(),
+        config.ssh_identity_file.as_deref(),
+    ).await?;
+
      let mut cmd = Command::new("pkexec");
      let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
      let flake_arg = format!("{}#", flake_path.display());
-     cmd.arg("nix")
+     
+     let path_env = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
+     let combined_path = format!("{}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", path_env);
+
+     cmd.arg("/usr/bin/env")
+         .arg(format!("PATH={}", combined_path))
+         .arg("nix")
          .arg("--extra-experimental-features")
          .arg("nix-command flakes")
          .arg("run")
@@ -261,7 +330,7 @@ async fn deploy_existing(config: ExistingDeployConfig) -> Result<DeployResult, S
         let extra_files_dir = deploy_dir.join("extra-files/etc");
         fs::create_dir_all(&extra_files_dir).map_err(|e| e.to_string())?;
         fs::write(extra_files_dir.join("nextcloud-admin-pass"), pwd).map_err(|e| e.to_string())?;
-        cmd.arg("--extra-files").arg("extra-files");
+        cmd.arg("--extra-files").arg(deploy_dir.join("extra-files"));
     }
 
     if let Some(ref identity) = config.ssh_identity_file {

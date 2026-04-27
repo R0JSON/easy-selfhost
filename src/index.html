@@ -270,6 +270,10 @@
                 <label class="block text-sm font-medium text-gray-700">SSH User</label>
                 <input type="text" id="target_user" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="root">
               </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">SSH Password (Optional)</label>
+                <input type="password" id="ssh_password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Used for ssh-copy-id">
+              </div>
             </div>
             <p class="text-sm text-gray-500">The SSH identity file (private key) will be automatically loaded if you generated a new key in the previous step.</p>
           </div>
@@ -313,6 +317,10 @@
               <div>
                 <label class="block text-sm font-medium text-gray-700">SSH Identity File (Private Key)</label>
                 <input type="text" id="existing_ssh_identity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="/path/to/private/key (optional)">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">SSH Password (Optional)</label>
+                <input type="password" id="existing_ssh_password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Used for ssh-copy-id">
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Nextcloud Admin Password (Optional)</label>
