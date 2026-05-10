@@ -144,10 +144,8 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
     let jellyfin_block = if config.jellyfin_enable {
         let _hostname = config.jellyfin_hostname.as_deref().unwrap_or("");
         let media_dir = config.jellyfin_media_dir.as_deref().unwrap_or("");
-        let open_fw = config.jellyfin_open_firewall.unwrap_or(false);
         format!(
-            "services.jellyfin = {{ enable = true; openFirewall = {}; dataDir = \"{}\"; }};",
-            if open_fw { "true" } else { "false" },
+            "services.jellyfin = {{ enable = true; openFirewall = true; dataDir = \"{}\"; }};",
             media_dir
         )
     } else {
