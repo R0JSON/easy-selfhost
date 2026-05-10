@@ -5,6 +5,8 @@
     "{{ ssh_key }}"
   ];
 
+  networking.firewall.allowedTCPPorts = [ 80 443 8443 ];
+
   services.nextcloud = {
     enable = true;
     hostName = "{{ nextcloud_hostname }}";
@@ -42,7 +44,7 @@
   services.caddy = {
     enable = true;
     globalConfig = "auto_https disable_redirects";
-    virtualHosts."{{ vaultwarden_hostname }}" = {
+    virtualHosts."{{ vaultwarden_hostname }}:8443" = {
       extraConfig = "
         tls internal
         reverse_proxy 127.0.0.1:{{ vaultwarden_port }}

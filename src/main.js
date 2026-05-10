@@ -1,4 +1,5 @@
 const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
 
 window.addEventListener("DOMContentLoaded", async () => {
   // Screens
@@ -227,6 +228,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     btnBackHomeProgress.classList.add("hidden");
     showScreen(screenDeployProgress);
   }
+
+  listen("deploy-progress", (event) => {
+    if (progressLogs.textContent === "Waiting for output...\n") {
+      progressLogs.textContent = "";
+    }
+    progressLogs.textContent += event.payload + "\n";
+    progressLogs.scrollTop = progressLogs.scrollHeight;
+  });
 
   function completeProgressScreen(isSuccess, message) {
     spinner.style.display = "none";

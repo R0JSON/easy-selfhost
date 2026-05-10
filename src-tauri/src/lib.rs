@@ -1,7 +1,9 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::io::{BufRead, BufReader};
+use std::thread;
 use std::fs;
 use std::path::PathBuf;
-use tauri::Manager;
+use tauri::{Manager, Emitter};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -200,8 +202,12 @@ async fn run_ssh_copy_id(
     ssh_identity_file: Option<&str>,
 ) -> Result<(), String> {
     if let Some(password) = ssh_password {
+        let path_env = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
+        let combined_path = format!("{}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", path_env);
+
         let mut cmd = Command::new("sshpass");
-        cmd.env("SSHPASS", password)
+        cmd.env("PATH", combined_path)
+            .env("SSHPASS", password)
             .arg("-e")
             .arg("ssh-copy-id")
             .arg("-o")
@@ -246,17 +252,15 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
     fs::write(extra_files_dir.join("nextcloud-admin-pass"), &config.admin_password).map_err(|e| e.to_string())?;
 
     // Run nixos-anywhere
-     let mut cmd = Command::new("pkexec");
+     let mut cmd = Command::new("nix");
      let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
      let flake_arg = format!("{}#{}", flake_path.display(), config.hostname);
      
      let path_env = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
      let combined_path = format!("{}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", path_env);
-     
-     cmd.arg("/usr/bin/env")
-         .arg(format!("PATH={}", combined_path))
-         .arg("nix")
-         .arg("--extra-experimental-features")
+     cmd.env("PATH", &combined_path);
+
+     cmd.arg("--extra-experimental-features")
          .arg("nix-command flakes")
          .arg("run")
          .arg("github:nix-community/nixos-anywhere")
@@ -269,32 +273,67 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
     if let Some(ref identity) = config.ssh_identity_file {
         cmd.arg("-i").arg(identity);
     }
+    
+    if let Some(ref password) = config.ssh_password {
+        cmd.env("SSHPASS", password);
+        cmd.arg("--env-password");
+    }
 
     cmd.arg("--target-host")
        .arg(format!("{}@{}", config.target_user, config.target_ip));
     println!("{:?}", deploy_dir);
-    let output = cmd
+
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = cmd
         .current_dir(&deploy_dir)
-        .output()
+        .spawn()
         .map_err(|e| format!("Failed to execute nixos-anywhere: {}", e))?;
 
-    if output.status.success() {
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+
+    let app_clone1 = app.clone();
+    let app_clone2 = app.clone();
+
+    let thread_out = thread::spawn(move || {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app_clone1.emit("deploy-progress", line);
+            }
+        }
+    });
+
+    let thread_err = thread::spawn(move || {
+        let reader = BufReader::new(stderr);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app_clone2.emit("deploy-progress", line);
+            }
+        }
+    });
+
+    let status = child.wait().map_err(|e| format!("Failed to wait for process: {}", e))?;
+    let _ = thread_out.join();
+    let _ = thread_err.join();
+
+    if status.success() {
         Ok(DeployResult {
             success: true,
             message: "Deployment successful!".to_string(),
         })
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let stdout = String::from_utf8_lossy(&output.stdout);
         Ok(DeployResult {
             success: false,
-            message: format!("Deployment failed:\n{}\n{}", stderr, stdout),
+            message: format!("Deployment failed with status: {}", status),
         })
     }
 }
 
 #[tauri::command]
-async fn deploy_existing(config: ExistingDeployConfig) -> Result<DeployResult, String> {
+async fn deploy_existing(app: tauri::AppHandle, config: ExistingDeployConfig) -> Result<DeployResult, String> {
     let deploy_dir = PathBuf::from(&config.flake_dir);
     
     // Copy SSH key if password is provided
@@ -305,17 +344,15 @@ async fn deploy_existing(config: ExistingDeployConfig) -> Result<DeployResult, S
         config.ssh_identity_file.as_deref(),
     ).await?;
 
-     let mut cmd = Command::new("pkexec");
+     let mut cmd = Command::new("nix");
      let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
      let flake_arg = format!("{}#", flake_path.display());
      
      let path_env = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
      let combined_path = format!("{}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", path_env);
+     cmd.env("PATH", &combined_path);
 
-     cmd.arg("/usr/bin/env")
-         .arg(format!("PATH={}", combined_path))
-         .arg("nix")
-         .arg("--extra-experimental-features")
+     cmd.arg("--extra-experimental-features")
          .arg("nix-command flakes")
          .arg("run")
          .arg("github:nix-community/nixos-anywhere")
@@ -335,25 +372,59 @@ async fn deploy_existing(config: ExistingDeployConfig) -> Result<DeployResult, S
         cmd.arg("-i").arg(identity);
     }
 
+    if let Some(ref password) = config.ssh_password {
+        cmd.env("SSHPASS", password);
+        cmd.arg("--env-password");
+    }
+
     cmd.arg("--target-host")
        .arg(format!("{}@{}", config.target_user, config.target_ip));
 
-    let output = cmd
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = cmd
         .current_dir(&deploy_dir)
-        .output()
+        .spawn()
         .map_err(|e| format!("Failed to execute nixos-anywhere: {}", e))?;
 
-    if output.status.success() {
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+
+    let app_clone1 = app.clone();
+    let app_clone2 = app.clone();
+
+    let thread_out = thread::spawn(move || {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app_clone1.emit("deploy-progress", line);
+            }
+        }
+    });
+
+    let thread_err = thread::spawn(move || {
+        let reader = BufReader::new(stderr);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                let _ = app_clone2.emit("deploy-progress", line);
+            }
+        }
+    });
+
+    let status = child.wait().map_err(|e| format!("Failed to wait for process: {}", e))?;
+    let _ = thread_out.join();
+    let _ = thread_err.join();
+
+    if status.success() {
         Ok(DeployResult {
             success: true,
             message: "Deployment successful!".to_string(),
         })
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let stdout = String::from_utf8_lossy(&output.stdout);
         Ok(DeployResult {
             success: false,
-            message: format!("Deployment failed:\n{}\n{}", stderr, stdout),
+            message: format!("Deployment failed with status: {}", status),
         })
     }
 }
