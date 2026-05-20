@@ -117,6 +117,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_hostname", "jellyfin_media_dir"]);
   setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_hostname"]);
+  setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_hostname", "admin_password"]);
 
   // SSH Key Generation
   const generateKeyBtn = document.querySelector("#generate-key-btn");
@@ -179,8 +180,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Get Config from Form
   function getCreateConfig() {
+    const nextcloudEnabled= document.querySelector("#svc_nextcloud").checked;
     const jellyfinEnabled = document.querySelector("#svc_jellyfin").checked;
     const vaultwardenEnabled = document.querySelector("#svc_vaultwarden").checked;
+    
 
     return {
       // Connection (filled in step 2)
@@ -193,10 +196,11 @@ window.addEventListener("DOMContentLoaded", async () => {
       target_device: document.querySelector("#target_device").value,
 
       // Nextcloud (always enabled)
-      nextcloud_hostname: document.querySelector("#nextcloud_hostname").value,
-      admin_password: document.querySelector("#admin_password").value,
-      ssl_enable: document.querySelector("#ssl_enable").checked,
-      acme_email: document.querySelector("#acme_email").value,
+      nextcloud_enable: nextcloudEnabled,
+      nextcloud_hostname: nextcloudEnabled ? document.querySelector("#nextcloud_hostname").value : null,
+      admin_password: nextcloudEnabled ?  document.querySelector("#admin_password").value : null,
+      ssl_enable: nextcloudEnabled ?  document.querySelector("#ssl_enable").checked : false,
+      acme_email: nextcloudEnabled && document.querySelector("#ssl_enable").checked  ?  document.querySelector("#acme_email").value : null,
 
       // SSH identity
       ssh_identity_file: sshIdentityInput.value || null,
@@ -259,9 +263,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     e.preventDefault();
     const config = getCreateConfig();
 
-    const services = ["Nextcloud"];
+    const services = [];
+    if (config.nextcloud_enable) services.push("Nextcloud");
     if (config.jellyfin_enable) services.push("Jellyfin");
     if (config.vaultwarden_enable) services.push("Vaultwarden");
+    if (services.length == 0) services.push("Base system only");
 
     initProgressScreen(
       `Deploying Configuration (${services.join(", ")})...`,
