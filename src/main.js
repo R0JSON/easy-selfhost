@@ -1,4 +1,5 @@
 const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
 
 window.addEventListener("DOMContentLoaded", async () => {
   // Screens
@@ -36,6 +37,34 @@ window.addEventListener("DOMContentLoaded", async () => {
   const progressLogs = document.querySelector("#progress-logs");
   const spinner = document.querySelector(".spinner");
 
+  // dark / light mode toggle
+  const themeToggle = document.querySelector("#theme-toggle");
+  const iconSun = document.querySelector("#icon-sun");
+  const iconMoon = document.querySelector("#icon-moon");
+  const html = document.documentElement;
+
+  function applyTheme(dark) {
+    if (dark) {
+      html.classList.add("dark");
+      iconSun.classList.remove("hidden");
+      iconMoon.classList.add("hidden");
+    } else {
+      html.classList.remove("dark");
+      iconSun.classList.add("hidden");
+      iconMoon.classList.remove("hidden");
+    }
+  }
+
+  //  saved preference
+  const savedTheme = localStorage.getItem("theme");
+  applyTheme(savedTheme === "dark");
+
+  themeToggle.addEventListener("click", () => {
+    const isDark = html.classList.contains("dark");
+    applyTheme(!isDark);
+    localStorage.setItem("theme", !isDark ? "dark" : "light");
+  });
+
   // Navigation Logic
   function showScreen(screen) {
     screenHome.classList.add("hidden");
@@ -63,6 +92,43 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Base Domain logic
+  const baseDomainInput = document.querySelector("#base_domain");
+  const baseDomainPreviews = document.querySelectorAll(".base-domain-preview");
+  baseDomainInput.addEventListener("input", () => {
+    const val = baseDomainInput.value.trim();
+    const suffix = val ? `.${val}` : ".example.com";
+    baseDomainPreviews.forEach(p => p.textContent = suffix);
+  });
+
+  // Service toggle logic: show/hide config panels when checkboxes are toggled
+  function setupServiceToggle(checkboxId, configPanelId, requiredFieldIds = []) {
+    const checkbox = document.querySelector(`#${checkboxId}`);
+    const panel = document.querySelector(`#${configPanelId}`);
+    if (!checkbox || !panel) return;
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        panel.classList.add("active");
+        requiredFieldIds.forEach(id => {
+          const el = document.querySelector(`#${id}`);
+          if (el) el.required = true;
+        });
+      } else {
+        panel.classList.remove("active");
+        requiredFieldIds.forEach(id => {
+          const el = document.querySelector(`#${id}`);
+          if (el) el.required = false;
+        });
+      }
+    });
+  }
+
+  setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_subdomain", "admin_password"]);
+  setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_hostname", "jellyfin_media_dir"]);
+  setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_hostname"]);
+  setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_hostname", "admin_password"]);
+
   // SSH Key Generation
   const generateKeyBtn = document.querySelector("#generate-key-btn");
   const sshKeyArea = document.querySelector("#ssh_key");
@@ -86,12 +152,28 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Vaultwarden admin token generator
+  const generateVwTokenBtn = document.querySelector("#generate-vw-token-btn");
+  const vwTokenInput = document.querySelector("#vaultwarden_admin_token");
+
+  generateVwTokenBtn.addEventListener("click", () => {
+    // Generate a random 48-char hex token without calling backend
+    const array = new Uint8Array(24);
+    crypto.getRandomValues(array);
+    vwTokenInput.value = Array.from(array).map(b => b.toString(16).padStart(2, "0")).join("");
+    vwTokenInput.type = "text";
+    setTimeout(() => { vwTokenInput.type = "password"; }, 3000);
+  });
+
   // Check Dependencies on Startup
   try {
     const deps = await invoke("check_dependencies");
     const missing = [];
     if (!deps.nix) missing.push("nix");
     if (!deps.ssh) missing.push("ssh");
+    if (!deps.sshpass) missing.push("sshpass");
+    if (!deps.cpio) missing.push("cpio");
+    if (!deps.git) missing.push("git");
 
     if (missing.length > 0) {
       depsMsg.textContent = `Missing required tools: ${missing.join(", ")}. Please install them.`;
@@ -109,17 +191,47 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Get Config from Form
   function getCreateConfig() {
+    const nextcloudEnabled = document.querySelector("#svc_nextcloud").checked;
+    const jellyfinEnabled = document.querySelector("#svc_jellyfin").checked;
+    const vaultwardenEnabled = document.querySelector("#svc_vaultwarden").checked;
+    const baseDomain = document.querySelector("#base_domain").value.trim();
+
     return {
+      // Connection (filled in step 2)
       target_ip: document.querySelector("#target_ip")?.value || "",
       target_user: document.querySelector("#target_user")?.value || "",
+
+      // System
       hostname: document.querySelector("#hostname").value,
       ssh_key: document.querySelector("#ssh_key").value,
       target_device: document.querySelector("#target_device").value,
-      nextcloud_hostname: document.querySelector("#nextcloud_hostname").value,
-      admin_password: document.querySelector("#admin_password").value,
-      ssl_enable: document.querySelector("#ssl_enable").checked,
-      acme_email: document.querySelector("#acme_email").value,
+
+      // Nextcloud (always enabled)
+      nextcloud_enable: nextcloudEnabled,
+      nextcloud_hostname: nextcloudEnabled ? document.querySelector("#nextcloud_hostname").value : null,
+      admin_password: nextcloudEnabled ?  document.querySelector("#admin_password").value : null,
+      ssl_enable: nextcloudEnabled ?  document.querySelector("#ssl_enable").checked : false,
+      acme_email: nextcloudEnabled && document.querySelector("#ssl_enable").checked  ?  document.querySelector("#acme_email").value : null,
+
+      // SSH identity
       ssh_identity_file: sshIdentityInput.value || null,
+      ssh_password: document.querySelector("#ssh_password").value || null,
+
+      // Nextcloud
+      nextcloud_enable: nextcloudEnabled,
+      nextcloud_hostname: nextcloudEnabled ? `${document.querySelector("#nextcloud_subdomain").value.trim()}.${baseDomain}` : null,
+      admin_password: nextcloudEnabled ? document.querySelector("#admin_password").value : null,
+
+      // Jellyfin
+      jellyfin_enable: jellyfinEnabled,
+      jellyfin_hostname: jellyfinEnabled ? `${document.querySelector("#jellyfin_subdomain").value.trim()}.${baseDomain}` : null,
+      jellyfin_media_dir: jellyfinEnabled ? document.querySelector("#jellyfin_media_dir").value : null,
+
+      // Vaultwarden
+      vaultwarden_enable: vaultwardenEnabled,
+      vaultwarden_hostname: vaultwardenEnabled ? `${document.querySelector("#vaultwarden_subdomain").value.trim()}.${baseDomain}` : null,
+      vaultwarden_admin_token: vaultwardenEnabled ? (document.querySelector("#vaultwarden_admin_token").value || null) : null,
+      vaultwarden_signups_allowed: vaultwardenEnabled ? document.querySelector("#vaultwarden_signups").checked : false,
     };
   }
 
@@ -127,12 +239,23 @@ window.addEventListener("DOMContentLoaded", async () => {
     progressTitle.textContent = title;
     progressStatusText.textContent = statusText;
     progressStatusText.className = "text-lg text-gray-600 font-medium";
-    progressLogs.textContent = "Waiting for output...\n";
-    progressLogs.className = "bg-gray-900 text-gray-100 font-mono text-sm p-4 rounded-md flex-grow overflow-y-auto max-h-96 whitespace-pre-wrap";
+    progressLogs.textContent = "";
+    progressLogs.appendChild(document.createTextNode("Waiting for output...\n"));
+    // Keep the classes set in index.html instead of overwriting them
     spinner.style.display = "block";
     btnBackHomeProgress.classList.add("hidden");
     showScreen(screenDeployProgress);
   }
+
+  listen("deploy-progress", (event) => {
+    if (progressLogs.firstChild && progressLogs.firstChild.nodeValue === "Waiting for output...\n") {
+      progressLogs.textContent = "";
+    }
+    progressLogs.appendChild(document.createTextNode(event.payload + "\n"));
+    requestAnimationFrame(() => {
+      progressLogs.scrollTop = progressLogs.scrollHeight;
+    });
+  });
 
   function completeProgressScreen(isSuccess, message) {
     spinner.style.display = "none";
@@ -156,7 +279,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     e.preventDefault();
     const config = getCreateConfig();
 
-    initProgressScreen("Deploying Configuration...", "Generating Nix files and starting nixos-anywhere...");
+    const services = [];
+    if (config.nextcloud_enable) services.push("Nextcloud");
+    if (config.jellyfin_enable) services.push("Jellyfin");
+    if (config.vaultwarden_enable) services.push("Vaultwarden");
+    if (services.length == 0) services.push("Base system only");
+
+    initProgressScreen(
+      `Deploying Configuration (${services.join(", ")})...`,
+      "Generating Nix files and starting nixos-anywhere..."
+    );
 
     try {
       const result = await invoke("deploy", { config });
@@ -221,6 +353,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       target_ip: document.querySelector("#existing_target_ip").value,
       target_user: document.querySelector("#existing_target_user").value,
       ssh_identity_file: document.querySelector("#existing_ssh_identity").value || null,
+      ssh_password: document.querySelector("#existing_ssh_password").value || null,
       admin_password: document.querySelector("#existing_admin_pwd").value || null,
     };
 
