@@ -12,6 +12,7 @@
         disko.nixosModules.disko
         ./disk-config.nix
         ./configuration.nix
+        (if builtins.pathExists ./hardware-configuration.nix then ./hardware-configuration.nix else {})
       ];
     };
   };

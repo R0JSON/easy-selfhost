@@ -16,12 +16,13 @@ struct DeployConfig {
     hostname: String,
     ssh_key: String,
     target_device: String,
-
-    // Nextcloud (always enabled)
-    nextcloud_hostname: String,
-    admin_password: String,
     ssl_enable: bool,
     acme_email: String,
+
+    // Nextcloud
+    nextcloud_enable: bool,
+    nextcloud_hostname: Option<String>,
+    admin_password: Option<String>,
 
     // SSH identity
     ssh_identity_file: Option<String>,
@@ -31,12 +32,10 @@ struct DeployConfig {
     jellyfin_enable: bool,
     jellyfin_hostname: Option<String>,
     jellyfin_media_dir: Option<String>,
-    jellyfin_open_firewall: Option<bool>,
 
     // Vaultwarden
     vaultwarden_enable: bool,
     vaultwarden_hostname: Option<String>,
-    vaultwarden_port: Option<u16>,
     vaultwarden_admin_token: Option<String>,
     vaultwarden_signups_allowed: Option<bool>,
 }
@@ -69,6 +68,7 @@ struct DependenciesResult {
     ssh: bool,
     sshpass: bool,
     cpio: bool,
+    git: bool,
 }
 
 #[tauri::command]
@@ -77,12 +77,14 @@ async fn check_dependencies() -> DependenciesResult {
     let ssh = Command::new("ssh").arg("-V").output().is_ok();
     let sshpass = Command::new("sshpass").arg("-V").output().is_ok();
     let cpio = Command::new("cpio").arg("--version").output().is_ok();
+    let git = Command::new("git").arg("--version").output().is_ok();
 
     DependenciesResult {
         nix,
         ssh,
         sshpass,
         cpio,
+        git,
     }
 }
 
@@ -142,37 +144,92 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
         "".to_string()
     };
 
+    // Nextcloud block
+    let nextcloud_block = if config.nextcloud_enable {
+        let hostname = config.nextcloud_hostname.as_deref().unwrap_or("");
+        format!(r#"
+  services.nextcloud = {{
+    enable = true;
+    hostName = "{}";
+    package = pkgs.nextcloud29;
+    
+    database.createLocally = true;
+    configureRedis = true;
+    
+    config = {{
+      dbtype = "pgsql";
+      adminuser = "admin";
+      adminpassFile = "/etc/nextcloud-admin-pass";
+    }};
+  }};"#, hostname)
+    } else {
+        "".to_string()
+    };
+
+    let nextcloud_nginx_vhost = if config.nextcloud_enable {
+        let hostname = config.nextcloud_hostname.as_deref().unwrap_or("");
+        format!(r#"
+  services.nginx.virtualHosts."{}" = {{
+    forceSSL = {};
+    enableACME = {};
+  }};"#, hostname, ssl_enable_str, ssl_enable_str)
+    } else { "".to_string() };
+
     // Jellyfin block
     let jellyfin_block = if config.jellyfin_enable {
-        let _hostname = config.jellyfin_hostname.as_deref().unwrap_or("");
         let media_dir = config.jellyfin_media_dir.as_deref().unwrap_or("");
         format!(
-            "services.jellyfin = {{ enable = true; openFirewall = true; dataDir = \"{}\"; }};",
+            "services.jellyfin = {{ enable = true; dataDir = \"{}\"; }};",
             media_dir
         )
     } else {
         "".to_string()
     };
 
+    let jellyfin_nginx_vhost = if config.jellyfin_enable {
+        let hostname = config.jellyfin_hostname.as_deref().unwrap_or("");
+        format!(r#"
+  services.nginx.virtualHosts."{}" = {{
+    forceSSL = {};
+    enableACME = {};
+    locations."/" = {{
+      proxyPass = "http://127.0.0.1:8096";
+      proxyWebsockets = true;
+    }};
+  }};"#, hostname, ssl_enable_str, ssl_enable_str)
+    } else { "".to_string() };
+
     // Vaultwarden block
     let vaultwarden_enable = if config.vaultwarden_enable {"true"} else {"false"};
     let vaultwarden_hostname = config.vaultwarden_hostname.as_deref().unwrap_or("");
-    let vaultwarden_port = config.vaultwarden_port.map(|p| p.to_string()).unwrap_or_else(|| "80".to_string());
     let _vaultwarden_admin_token = config.vaultwarden_admin_token.as_deref().unwrap_or("");
     let vaultwarden_signups = if config.vaultwarden_signups_allowed.unwrap_or(false) {"true"} else {"false"};
     
+    let vaultwarden_nginx_vhost = if config.vaultwarden_enable {
+        format!(r#"
+  services.nginx.virtualHosts."{}" = {{
+    forceSSL = {};
+    enableACME = {};
+    locations."/" = {{
+      proxyPass = "http://127.0.0.1:8222";
+      proxyWebsockets = true;
+    }};
+  }};"#, vaultwarden_hostname, ssl_enable_str, ssl_enable_str)
+    } else { "".to_string() };
 
     let configuration = include_str!("../nix/configuration.nix")
         .replace("{{ hostname }}", &config.hostname)
         .replace("{{ ssh_key }}", &config.ssh_key)
-        .replace("{{ nextcloud_hostname }}", &config.nextcloud_hostname)
+        .replace("{{ nextcloud_block }}", &nextcloud_block)
+        .replace("{{ nextcloud_nginx_vhost }}", &nextcloud_nginx_vhost)
         .replace("{{ ssl_enable }}", ssl_enable_str)
         .replace("{{ acme_config }}", &acme_config)
         .replace("{{ jellyfin_block }}", &jellyfin_block)
+        .replace("{{ jellyfin_nginx_vhost }}", &jellyfin_nginx_vhost)
         .replace("{{ vaultwarden_enable }}", vaultwarden_enable)
         .replace("{{ vaultwarden_hostname }}", vaultwarden_hostname)
         .replace("{{ vaultwarden_signups }}", vaultwarden_signups)
-        .replace("{{ vaultwarden_port }}", &vaultwarden_port)
+        .replace("{{ vaultwarden_nginx_vhost }}", &vaultwarden_nginx_vhost)
         ;
     fs::write(deploy_dir.join("configuration.nix"), configuration).map_err(|e| e.to_string())?;
 
@@ -200,13 +257,17 @@ async fn run_ssh_copy_id(
     target_ip: &str,
     ssh_password: Option<&str>,
     ssh_identity_file: Option<&str>,
+    app: &tauri::AppHandle,
 ) -> Result<(), String> {
     if let Some(password) = ssh_password {
         let path_env = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
         let combined_path = format!("{}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", path_env);
 
+        let _ = app.emit("deploy-progress", "SSH password provided. Attempting to install public key via ssh-copy-id...");
+
+        // 1. Copy SSH Key
         let mut cmd = Command::new("sshpass");
-        cmd.env("PATH", combined_path)
+        cmd.env("PATH", &combined_path)
             .env("SSHPASS", password)
             .arg("-e")
             .arg("ssh-copy-id")
@@ -221,11 +282,51 @@ async fn run_ssh_copy_id(
 
         let output = cmd.output().map_err(|e| format!("Failed to execute sshpass ssh-copy-id: {}", e))?;
         if !output.status.success() {
-            return Err(format!(
-                "ssh-copy-id failed: {}\n{}",
-                String::from_utf8_lossy(&output.stderr),
-                String::from_utf8_lossy(&output.stdout)
-            ));
+            // Ignore failures if the key already exists
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            if !stderr.contains("already exist") {
+                let _ = app.emit("deploy-progress", format!("ssh-copy-id warning: {}", stderr));
+                return Err(format!(
+                    "ssh-copy-id failed: {}\n{}",
+                    stderr,
+                    String::from_utf8_lossy(&output.stdout)
+                ));
+            } else {
+                let _ = app.emit("deploy-progress", "SSH key already exists on the remote system.");
+            }
+        } else {
+            let _ = app.emit("deploy-progress", "SSH key successfully installed.");
+        }
+
+        // 2. Automatically configure passwordless sudo and copy SSH keys to root for kexec
+        if target_user != "root" {
+            let _ = app.emit("deploy-progress", format!("Configuring passwordless sudo and copying SSH keys to root for user '{}'...", target_user));
+            let sudo_cmd = format!(
+                "echo '{pwd}' | sudo -S sh -c 'echo \"{user} ALL=(ALL) NOPASSWD: ALL\" > /etc/sudoers.d/{user} && mkdir -p /root/.ssh && cat ~{user}/.ssh/authorized_keys >> /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys'",
+                pwd=password, user=target_user
+            );
+
+            let mut sudo_setup = Command::new("sshpass");
+            sudo_setup.env("PATH", combined_path)
+                .env("SSHPASS", password)
+                .arg("-e")
+                .arg("ssh")
+                .arg("-o")
+                .arg("StrictHostKeyChecking=no");
+
+            if let Some(identity) = ssh_identity_file {
+                sudo_setup.arg("-i").arg(identity);
+            }
+
+            sudo_setup.arg(format!("{}@{}", target_user, target_ip))
+                .arg(&sudo_cmd);
+
+            let sudo_output = sudo_setup.output().map_err(|e| format!("Failed to configure sudo: {}", e))?;
+            if !sudo_output.status.success() {
+                let _ = app.emit("deploy-progress", format!("Warning: Failed to auto-configure passwordless sudo. It might already be set. Stderr: {}", String::from_utf8_lossy(&sudo_output.stderr)));
+            } else {
+                let _ = app.emit("deploy-progress", "Passwordless sudo successfully configured.");
+            }
         }
     }
     Ok(())
@@ -236,20 +337,29 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
     let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let deploy_dir = app_dir.join("deploy");
     
+    let _ = app.emit("deploy-progress", "Generating NixOS configuration files...");
     generate_nix_files(&deploy_dir, &config)?;
+    let _ = app.emit("deploy-progress", format!("Configuration files written to {:?}", deploy_dir));
 
+    let _ = app.emit("deploy-progress", "Configuring target server SSH access...");
     // Copy SSH key if password is provided
     run_ssh_copy_id(
         &config.target_user,
         &config.target_ip,
         config.ssh_password.as_deref(),
         config.ssh_identity_file.as_deref(),
+        &app
     ).await?;
 
-    // Generate admin password file for extra-files
-    let extra_files_dir = deploy_dir.join("extra-files/etc");
-    fs::create_dir_all(&extra_files_dir).map_err(|e| e.to_string())?;
-    fs::write(extra_files_dir.join("nextcloud-admin-pass"), &config.admin_password).map_err(|e| e.to_string())?;
+    // Generate admin password file for extra-files if Nextcloud is enabled
+    if let Some(pwd) = &config.admin_password {
+        let _ = app.emit("deploy-progress", "Writing Nextcloud admin password secret file...");
+        let extra_files_dir = deploy_dir.join("extra-files/etc");
+        fs::create_dir_all(&extra_files_dir).map_err(|e| e.to_string())?;
+        fs::write(extra_files_dir.join("nextcloud-admin-pass"), pwd).map_err(|e| e.to_string())?;
+    }
+
+    let _ = app.emit("deploy-progress", "Starting NixOS-Anywhere deployment. This may take several minutes...");
 
     // Run nixos-anywhere
      let mut cmd = Command::new("nix");
@@ -265,6 +375,10 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
          .arg("run")
          .arg("github:nix-community/nixos-anywhere")
          .arg("--")
+         .arg("-L")
+         .arg("--generate-hardware-config")
+         .arg("nixos-generate-config")
+         .arg("./hardware-configuration.nix")
          .arg("--flake")
          .arg(flake_arg)
          .arg("--extra-files")
@@ -336,13 +450,19 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
 async fn deploy_existing(app: tauri::AppHandle, config: ExistingDeployConfig) -> Result<DeployResult, String> {
     let deploy_dir = PathBuf::from(&config.flake_dir);
     
+    let _ = app.emit("deploy-progress", format!("Preparing deployment using existing configuration at {:?}", deploy_dir));
+    let _ = app.emit("deploy-progress", "Configuring target server SSH access...");
+
     // Copy SSH key if password is provided
     run_ssh_copy_id(
         &config.target_user,
         &config.target_ip,
         config.ssh_password.as_deref(),
         config.ssh_identity_file.as_deref(),
+        &app
     ).await?;
+
+    let _ = app.emit("deploy-progress", "Starting NixOS-Anywhere deployment. This may take several minutes...");
 
      let mut cmd = Command::new("nix");
      let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
@@ -357,6 +477,10 @@ async fn deploy_existing(app: tauri::AppHandle, config: ExistingDeployConfig) ->
          .arg("run")
          .arg("github:nix-community/nixos-anywhere")
          .arg("--")
+         .arg("-L")
+         .arg("--generate-hardware-config")
+         .arg("nixos-generate-config")
+         .arg("./hardware-configuration.nix")
          .arg("--flake")
          .arg(flake_arg);
 

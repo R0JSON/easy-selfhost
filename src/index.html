@@ -123,6 +123,10 @@
                 <input type="text" id="hostname" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="my-server">
               </div>
               <div>
+                <label class="block text-sm font-medium text-gray-700">Base Domain</label>
+                <input type="text" id="base_domain" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="example.com">
+              </div>
+              <div>
                 <label class="block text-sm font-medium text-gray-700">Target Device</label>
                 <input type="text" id="target_device" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="/dev/sda">
               </div>
@@ -140,6 +144,26 @@
                   </p>
                 </div>
               </div>
+              <div class="md:col-span-2 border-t pt-4">
+                <div class="flex items-center space-x-3 mb-4">
+                  <input type="checkbox" id="ssl_enable" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="text-sm font-medium text-gray-700">Enable Global SSL (Let's Encrypt via Nginx)</label>
+                </div>
+                <div id="acme-email-container" class="hidden">
+                  <label class="block text-sm font-medium text-gray-700">ACME Email (for certificate recovery)</label>
+                  <input type="email" id="acme_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="admin@example.com">
+                </div>
+              </div>
+              <div class="md:col-span-2 border-t pt-4">
+                <div class="flex items-center space-x-3 mb-4">
+                  <input type="checkbox" id="ssl_enable" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="text-sm font-medium text-gray-700">Enable Global SSL (Let's Encrypt via Nginx)</label>
+                </div>
+                <div id="acme-email-container" class="hidden">
+                  <label class="block text-sm font-medium text-gray-700">ACME Email (for certificate recovery)</label>
+                  <input type="email" id="acme_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="admin@example.com">
+                </div>
+              </div>
             </div>
           </div>
 
@@ -152,24 +176,19 @@
               <div class="p-4 border rounded-md">
                 <div class="flex items-center mb-2">
                   <input type="checkbox" id="svc_nextcloud" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                  <label class="ml-2 text-sm font-medium text-gray-900">Nextcloud</label>
+                  <label class="ml-2 text-sm font-medium text-gray-900">Nextcloud <span class="text-xs text-gray-500">(Cloud Storage)</span></label>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div id="nextcloud-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700">Nextcloud Domain</label>
-                    <input type="text" id="nextcloud_hostname" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="cloud.example.com">
+                    <label class="block text-sm font-medium text-gray-700">Nextcloud Subdomain</label>
+                    <div class="flex items-center gap-2 mt-1">
+                      <input type="text" id="nextcloud_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="cloud">
+                      <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700">Admin Password</label>
-                    <input type="password" id="admin_password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
-                  </div>
-                  <div class="flex items-center space-x-3 mt-2 md:col-span-2">
-                    <input type="checkbox" id="ssl_enable" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                    <label class="text-sm font-medium text-gray-700">Enable SSL (Let's Encrypt)</label>
-                  </div>
-                  <div id="acme-email-container" class="hidden md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700">ACME Email</label>
-                    <input type="email" id="acme_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="admin@example.com">
+                    <input type="password" id="admin_password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                   </div>
                 </div>
               </div>
@@ -182,8 +201,11 @@
                 </div>
                 <div id="jellyfin-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700">Jellyfin Domain</label>
-                    <input type="text" id="jellyfin_hostname" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="media.example.com">
+                    <label class="block text-sm font-medium text-gray-700">Jellyfin Subdomain</label>
+                    <div class="flex items-center gap-2 mt-1">
+                      <input type="text" id="jellyfin_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="media">
+                      <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700">Media Library Path</label>
@@ -198,10 +220,6 @@
                       <option value="nvenc">NVENC (NVIDIA)</option>
                     </select>
 		  </div> -->
-                  <div class="flex items-center space-x-3 md:col-span-2">
-                    <input type="checkbox" id="jellyfin_open_firewall" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                    <label class="text-sm font-medium text-gray-700">Open firewall port 8096</label>
-                  </div>
                 </div>
               </div>
 
@@ -213,12 +231,11 @@
                 </div>
                 <div id="vaultwarden-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700">Vaultwarden Domain</label>
-                    <input type="text" id="vaultwarden_hostname" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="vault.example.com">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700">Rocket Port</label>
-                    <input type="number" id="vaultwarden_port" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="8222">
+                    <label class="block text-sm font-medium text-gray-700">Vaultwarden Subdomain</label>
+                    <div class="flex items-center gap-2 mt-1">
+                      <input type="text" id="vaultwarden_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="vault">
+                      <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
+                    </div>
                   </div>
                   <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700">Admin Token</label>
@@ -234,7 +251,7 @@
                   </div>
                   <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
                     <p class="text-xs text-blue-700">
-                      <strong>Note:</strong> Vaultwarden will be reverse-proxied via Caddy on port 8443 with a self-signed TLS certificate. Make sure port 8443 is reachable from your network.
+                      <strong>Note:</strong> Vaultwarden and Jellyfin will be automatically reverse-proxied via Nginx over standard web ports (80/443). Ensure your base domain is pointing to the server's IP.
                     </p>
                   </div>
                 </div>
@@ -373,9 +390,24 @@
           </p>
         </div>
 
-        <div class="mt-4 flex-grow flex flex-col">
+        <!-- Post-install info: shown only on success -->
+        <div id="post-install-info" class="hidden mb-4 p-4 bg-green-50 border border-green-300 rounded-md space-y-2">
+          <h3 class="text-sm font-semibold text-green-800">✅ Installation complete — what to do next</h3>
+          <p class="text-xs text-green-700">
+            <strong>SSH login:</strong> Connect with the username you specified (e.g. <code>nixos</code>) and the SSH key generated during configuration.<br>
+            Example: <code id="post-install-ssh-example">ssh nixos@&lt;server-ip&gt;</code>
+          </p>
+          <p class="text-xs text-green-700">
+            <strong>Service access:</strong> After the server reboots and gets a network address, access your services via the domains you configured. If you used local/self-signed TLS, accept the certificate warning in your browser. If the domain is not public, make sure your DNS or <code>/etc/hosts</code> points to the server's IP.
+          </p>
+          <p class="text-xs text-amber-700">
+            ⚠️ <strong>IP may have changed:</strong> The server might have received a different IP after install. Check your router's DHCP table or configure a static/reserved address before trying to connect.
+          </p>
+        </div>
+
+        <div class="mt-4 flex-grow flex flex-col min-h-0">
           <h3 class="text-sm font-medium text-gray-700 mb-2">Logs</h3>
-          <div class="bg-gray-900 text-gray-100 font-mono text-sm p-4 rounded-md flex-grow overflow-y-auto max-h-96 whitespace-pre-wrap" id="progress-logs">Waiting for output...</div>
+          <div class="bg-gray-900 text-gray-100 font-mono text-sm p-4 rounded-md overflow-y-auto h-96 whitespace-pre-wrap shadow-inner" id="progress-logs">Waiting for output...</div>
         </div>
       </div>
 
