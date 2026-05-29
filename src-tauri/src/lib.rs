@@ -70,7 +70,6 @@ struct ExistingDeployConfig {
     target_user: String,
     ssh_identity_file: Option<String>,
     ssh_password: Option<String>,
-    admin_password: Option<String>, // optional for existing configs
 }
 
 #[derive(Serialize)]
@@ -183,8 +182,14 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
       adminuser = "admin";
       adminpassFile = "/etc/nextcloud-admin-pass";
     }};
-  }};"#, hostname)
-    } else { "".to_string() };
+  }};
+
+  systemd.tmpfiles.rules = [
+    "z /etc/nextcloud-admin-pass 0600 nextcloud nextcloud - -"
+  ];"#, hostname)
+    } else {
+        "".to_string()
+    };
 
     let nextcloud_nginx_vhost = if config.nextcloud_enable {
         let hostname = config.nextcloud_hostname.as_deref().unwrap_or("");
@@ -217,6 +222,11 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
     // --- VAULTWARDEN ---
     let vaultwarden_enable = if config.vaultwarden_enable {"true"} else {"false"};
     let vaultwarden_hostname = config.vaultwarden_hostname.as_deref().unwrap_or("");
+    let vaultwarden_env_file = if config.vaultwarden_admin_token.is_some() {
+        "environmentFile = \"/etc/vaultwarden.env\";"
+    } else {
+        ""
+    };
     let vaultwarden_signups = if config.vaultwarden_signups_allowed.unwrap_or(false) {"true"} else {"false"};
     
     let vaultwarden_nginx_vhost = if config.vaultwarden_enable {
@@ -323,6 +333,7 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
         .replace("{{ jellyfin_block }}", &jellyfin_block)
         .replace("{{ jellyfin_nginx_vhost }}", &jellyfin_nginx_vhost)
         .replace("{{ vaultwarden_enable }}", vaultwarden_enable)
+        .replace("{{ vaultwarden_env_file }}", vaultwarden_env_file)
         .replace("{{ vaultwarden_hostname }}", vaultwarden_hostname)
         .replace("{{ vaultwarden_signups }}", vaultwarden_signups)
         .replace("{{ vaultwarden_nginx_vhost }}", &vaultwarden_nginx_vhost)
@@ -344,6 +355,21 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
     let flake = include_str!("../nix/flake.nix")
         .replace("{{ hostname }}", &config.hostname);
     fs::write(deploy_dir.join("flake.nix"), flake).map_err(|e| e.to_string())?;
+
+    // Generate secret files for extra-files
+    let extra_files_dir = deploy_dir.join("extra-files/etc");
+
+    if config.admin_password.is_some() || config.vaultwarden_admin_token.is_some() {
+        fs::create_dir_all(&extra_files_dir).map_err(|e| e.to_string())?;
+    }
+
+    if let Some(pwd) = &config.admin_password {
+        fs::write(extra_files_dir.join("nextcloud-admin-pass"), pwd).map_err(|e| e.to_string())?;
+    }
+
+    if let Some(token) = &config.vaultwarden_admin_token {
+        fs::write(extra_files_dir.join("vaultwarden.env"), format!("ADMIN_TOKEN={}", token)).map_err(|e| e.to_string())?;
+    }
 
     Ok(())
 }
@@ -379,7 +405,11 @@ async fn run_ssh_copy_id(
             .arg("-e")
             .arg("ssh-copy-id")
             .arg("-o")
-            .arg("StrictHostKeyChecking=no");
+            .arg("StrictHostKeyChecking=no")
+            .arg("-o")
+            .arg("IdentitiesOnly=yes")
+            .arg("-o")
+            .arg("PreferredAuthentications=password");
 
         if let Some(identity) = ssh_identity_file {
             cmd.arg("-i").arg(identity);
@@ -419,7 +449,11 @@ async fn run_ssh_copy_id(
                 .arg("-e")
                 .arg("ssh")
                 .arg("-o")
-                .arg("StrictHostKeyChecking=no");
+                .arg("StrictHostKeyChecking=no")
+                .arg("-o")
+                .arg("IdentitiesOnly=yes")
+                .arg("-o")
+                .arg("PreferredAuthentications=password");
 
             if let Some(identity) = ssh_identity_file {
                 sudo_setup.arg("-i").arg(identity);
@@ -458,14 +492,6 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
         &app
     ).await?;
 
-    // Generate admin password file for extra-files if Nextcloud is enabled
-    if let Some(pwd) = &config.admin_password {
-        let _ = app.emit("deploy-progress", "Writing Nextcloud admin password secret file...");
-        let extra_files_dir = deploy_dir.join("extra-files/etc");
-        fs::create_dir_all(&extra_files_dir).map_err(|e| e.to_string())?;
-        fs::write(extra_files_dir.join("nextcloud-admin-pass"), pwd).map_err(|e| e.to_string())?;
-    }
-
     let _ = app.emit("deploy-progress", "Starting NixOS-Anywhere deployment. This may take several minutes...");
 
     // Run nixos-anywhere
@@ -489,10 +515,21 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
          .arg("--flake")
          .arg(flake_arg)
          .arg("--extra-files")
-         .arg(deploy_dir.join("extra-files"));
+         .arg(deploy_dir.join("extra-files"))
+         .arg("--ssh-option")
+         .arg("IdentitiesOnly=yes");
 
-    if let Some(ref identity) = config.ssh_identity_file {
-        cmd.arg("-i").arg(identity);
+    let default_key = app.path().app_data_dir().unwrap_or_default().join("ssh/id_ed25519");
+    let identity = if let Some(ref id) = config.ssh_identity_file {
+        id.clone()
+    } else if default_key.exists() {
+        default_key.to_string_lossy().to_string()
+    } else {
+        "".to_string()
+    };
+
+    if !identity.is_empty() {
+        cmd.arg("-i").arg(&identity);
     }
     
     if let Some(ref password) = config.ssh_password {
@@ -569,11 +606,32 @@ async fn deploy_existing(app: tauri::AppHandle, config: ExistingDeployConfig) ->
         &app
     ).await?;
 
+    let _ = app.emit("deploy-progress", "Detecting NixOS configuration from flake.nix...");
+
+    // Automatically detect the configuration name from flake.nix
+    let show_output = Command::new("nix")
+        .args(["--extra-experimental-features", "nix-command flakes", "flake", "show", "--json"])
+        .current_dir(&deploy_dir)
+        .output()
+        .map_err(|e| format!("Failed to run nix flake show: {}", e))?;
+
+    if !show_output.status.success() {
+        return Err(format!("nix flake show failed: {}", String::from_utf8_lossy(&show_output.stderr)));
+    }
+
+    let v: serde_json::Value = serde_json::from_slice(&show_output.stdout)
+        .map_err(|e| format!("Failed to parse nix flake show output: {}", e))?;
+
+    let config_name = v["nixosConfigurations"]
+        .as_object()
+        .and_then(|obj| obj.keys().next())
+        .ok_or_else(|| "No NixOS configurations found in flake.nix".to_string())?;
+
+    let _ = app.emit("deploy-progress", format!("Detected configuration: {}", config_name));
     let _ = app.emit("deploy-progress", "Starting NixOS-Anywhere deployment. This may take several minutes...");
 
      let mut cmd = Command::new("nix");
-     let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
-     let flake_arg = format!("{}#", flake_path.display());
+     let flake_arg = format!(".#{}", config_name);
      
      let path_env = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
      let combined_path = format!("{}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", path_env);
@@ -589,18 +647,27 @@ async fn deploy_existing(app: tauri::AppHandle, config: ExistingDeployConfig) ->
          .arg("nixos-generate-config")
          .arg("./hardware-configuration.nix")
          .arg("--flake")
-         .arg(flake_arg);
+         .arg(flake_arg)
+         .arg("--ssh-option")
+         .arg("IdentitiesOnly=yes");
 
-    // Optional extra-files if admin_password was provided
-    if let Some(pwd) = config.admin_password {
-        let extra_files_dir = deploy_dir.join("extra-files/etc");
-        fs::create_dir_all(&extra_files_dir).map_err(|e| e.to_string())?;
-        fs::write(extra_files_dir.join("nextcloud-admin-pass"), pwd).map_err(|e| e.to_string())?;
-        cmd.arg("--extra-files").arg(deploy_dir.join("extra-files"));
+    // Automatically detect and pass extra-files if the folder exists in the flake directory
+    let extra_files_path = deploy_dir.join("extra-files");
+    if extra_files_path.exists() {
+        cmd.arg("--extra-files").arg(extra_files_path);
     }
 
-    if let Some(ref identity) = config.ssh_identity_file {
-        cmd.arg("-i").arg(identity);
+    let default_key = app.path().app_data_dir().unwrap_or_default().join("ssh/id_ed25519");
+    let identity = if let Some(ref id) = config.ssh_identity_file {
+        id.clone()
+    } else if default_key.exists() {
+        default_key.to_string_lossy().to_string()
+    } else {
+        "".to_string()
+    };
+
+    if !identity.is_empty() {
+        cmd.arg("-i").arg(&identity);
     }
 
     if let Some(ref password) = config.ssh_password {
