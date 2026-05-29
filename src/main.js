@@ -127,7 +127,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_subdomain", "admin_password"]);
   setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_hostname", "jellyfin_media_dir"]);
   setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_hostname"]);
-  setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_hostname", "admin_password"]);
 
   // SSH Key Generation
   const generateKeyBtn = document.querySelector("#generate-key-btn");
@@ -227,10 +226,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       ssh_key: document.querySelector("#ssh_key").value,
       target_device: document.querySelector("#target_device").value,
 
-      // Nextcloud (always enabled)
-      nextcloud_enable: nextcloudEnabled,
-      nextcloud_hostname: nextcloudEnabled ? document.querySelector("#nextcloud_hostname").value : null,
-      admin_password: nextcloudEnabled ?  document.querySelector("#admin_password").value : null,
+      // SSL
       ssl_enable: nextcloudEnabled ?  document.querySelector("#ssl_enable").checked : false,
       acme_email: nextcloudEnabled && document.querySelector("#ssl_enable").checked  ?  document.querySelector("#acme_email").value : null,
 
