@@ -43,8 +43,11 @@
       }
       .dark .bg-yellow-50 { background-color: #422006 !important; }
       .dark .bg-blue-50 { background-color: #1e3a5f !important; }
+      .dark .fill-blue-50 { fill: #1e3a5f !important; }
       .dark .border-blue-200 { border-color: #2563eb !important; }
+      .dark .stroke-blue-200 { stroke: #2563eb !important; }
       .dark .text-blue-700 { color: #93c5fd !important; }
+      .dark .fill-blue-700 { fill: #93c5fd !important; }
       .dark .bg-gray-50.opacity-75 { background-color: #1f2937 !important; }
       .dark .hover\:bg-gray-50:hover { background-color: #374151 !important; }
       .dark .text-gray-700.bg-white { background-color: #1f2937 !important; color: #d1d5db !important; }
@@ -119,20 +122,80 @@
             <h3 class="font-medium text-gray-700">System Settings</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700">Hostname</label>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">Hostname</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Input your desired <strong>hostname</strong> on your target.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <input type="text" id="hostname" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="my-server">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Base Domain</label>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">Base Domain</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute right-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Input your <strong>base domain</strong>. Every service's domain will belong to this domain.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <input type="text" id="base_domain" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="example.com">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Target Device</label>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">Target Device</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Input the <strong>target disk</strong> where your services will be installed.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <input type="text" id="target_device" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="/dev/sda">
               </div>
               <div class="md:col-span-2">
                 <div class="flex justify-between items-center mb-1">
-                  <label class="block text-sm font-medium text-gray-700">Authorized SSH Key (Public)</label>
+                  <div class="flex items-center gap-1">
+                    <label class="block text-sm font-medium text-gray-700">Authorized SSH Key (Public)</label>
+                    <div class="group relative inline-block mb-1">
+                      <svg id="icon-help" class="cursor-help" width="20" height="20">
+                        <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                        <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                      </svg>     
+                      <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                        <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                          <p class="text-xs text-blue-700">
+                            Input OR Generate <strong>your SSH Public Key</strong>. If you've already generated one using this application, it's located within the following directory: <code>/home/your_user/.local/share/com.dreamteam.easy-selfhost/ssh/</code>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <button type="button" id="generate-key-btn" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Generate New Key</button>
                 </div>
                 <textarea id="ssh_key" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" rows="2" placeholder="ssh-ed25519 ..."></textarea>
@@ -147,7 +210,22 @@
               <div class="md:col-span-2 border-t pt-4">
                 <div class="flex items-center space-x-3 mb-4">
                   <input type="checkbox" id="ssl_enable" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                  <label class="text-sm font-medium text-gray-700">Enable Global SSL (Let's Encrypt via Nginx)</label>
+                  <div class="flex items-center gap-1">
+                    <label class="text-sm font-medium text-gray-700">Enable Global SSL (Let's Encrypt via Nginx)</label>
+                    <div class="group relative inline-block mb-1">
+                      <svg id="icon-help" class="cursor-help" width="20" height="20">
+                        <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                        <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                      </svg>     
+                      <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                        <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                          <p class="text-xs text-blue-700">
+                            Choose whether you would like to use an <strong>SSL Certificate</strong>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div id="acme-email-container" class="hidden">
                   <label class="block text-sm font-medium text-gray-700">ACME Email (for certificate recovery)</label>
@@ -170,7 +248,22 @@
                 </div>
                 <div id="nextcloud-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700">Nextcloud Subdomain</label>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Nextcloud Subdomain</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              <strong>Subdomain</strong> for your <strong>Nextcloud</strong> service.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div class="flex items-center gap-2 mt-1">
                       <input type="text" id="nextcloud_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="cloud">
                       <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
@@ -191,7 +284,22 @@
                 </div>
                 <div id="jellyfin-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700">Jellyfin Subdomain</label>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Jellyfin Subdomain</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              <strong>Subdomain</strong> for your <strong>Jellyfin</strong> service.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div class="flex items-center gap-2 mt-1">
                       <input type="text" id="jellyfin_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="media">
                       <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
@@ -221,27 +329,274 @@
                 </div>
                 <div id="vaultwarden-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700">Vaultwarden Subdomain</label>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Vaultwarden Subdomain</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              <strong>Subdomain</strong> for your <strong>Vaultwarden</strong> service.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div class="flex items-center gap-2 mt-1">
                       <input type="text" id="vaultwarden_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="vault">
                       <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
                     </div>
                   </div>
                   <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700">Admin Token</label>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Admin Token</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              Used to access <code>/admin</code>. Leave empty to disable the admin panel.</p>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div class="flex mt-1 gap-2">
                       <input type="password" id="vaultwarden_admin_token" class="flex-1 block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Leave empty to disable admin panel">
                       <button type="button" id="generate-vw-token-btn" class="px-3 py-2 text-xs border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 whitespace-nowrap">Generate</button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Used to access <code>/admin</code>. Leave empty to disable the admin panel.</p>
                   </div>
                   <div class="flex items-center space-x-3 md:col-span-2">
                     <input type="checkbox" id="vaultwarden_signups" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                    <label class="text-sm font-medium text-gray-700">Allow new user signups</label>
+                    <div class="flex items-center gap-1">
+                      <label class="text-sm font-medium text-gray-700">Allow new user signups</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              Choose whether to allow registration for new users.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
                     <p class="text-xs text-blue-700">
                       <strong>Note:</strong> Vaultwarden and Jellyfin will be automatically reverse-proxied via Nginx over standard web ports (80/443). Ensure your base domain is pointing to the server's IP.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- Immich Service -->
+              <div class="p-4 border rounded-md">
+                <div class="flex items-center mb-2">
+                  <input type="checkbox" id="svc_immich" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">Immich <span class="text-xs text-gray-500">(Photo & Video Backup)</span></label>
+                </div>
+                <div id="immich-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Immich Subdomain</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              <strong>Subdomain</strong> for your <strong>Immich</strong> service.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <input type="text" id="immich_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="photos">
+                      <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Media Upload Path</label>
+                    <input type="text" id="immich_media_dir" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="/var/lib/immich" value="/var/lib/immich">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gitea Service -->
+              <div class="p-4 border rounded-md">
+                <div class="flex items-center mb-2">
+                  <input type="checkbox" id="svc_gitea" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">Gitea <span class="text-xs text-gray-500">(Git Hosting)</span></label>
+                </div>
+                <div id="gitea-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Gitea Subdomain</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              <strong>Subdomain</strong> for your <strong>Gitea</strong> service.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <input type="text" id="gitea_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="git">
+                      <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">App Name</label>
+                    <input type="text" id="gitea_app_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="My Git Server" value="My Git Server">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Uptime Kuma Service -->
+              <div class="p-4 border rounded-md">
+                <div class="flex items-center mb-2">
+                  <input type="checkbox" id="svc_uptime_kuma" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">Uptime Kuma <span class="text-xs text-gray-500">(Uptime Monitoring)</span></label>
+                </div>
+                <div id="uptime-kuma-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Uptime Kuma Subdomain</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              <strong>Subdomain</strong> for your <strong>Uptime Kuma</strong> service.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <input type="text" id="uptime_kuma_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="uptime">
+                      <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vikunja Service -->
+              <div class="p-4 border rounded-md">
+                <div class="flex items-center mb-2">
+                  <input type="checkbox" id="svc_vikunja" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">Vikunja <span class="text-xs text-gray-500">(Task Manager)</span></label>
+                </div>
+                <div id="vikunja-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Vikunja Subdomain</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              <strong>Subdomain</strong> for your <strong>Vikunja</strong> service.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <input type="text" id="vikunja_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="tasks">
+                      <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tailscale Service -->
+              <div class="p-4 border rounded-md">
+                <div class="flex items-center mb-2">
+                  <input type="checkbox" id="svc_tailscale" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">Tailscale <span class="text-xs text-gray-500">(VPN / Mesh Network)</span></label>
+                </div>
+                <div id="tailscale-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div class="md:col-span-2">
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">Auth Key <span class="text-xs text-gray-400">(optional)</span></label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              Leave empty to authenticate manually after install via <code>tailscale up</code>.</p>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <input type="password" id="tailscale_auth_key" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="tskey-auth-... (optional)">
+                  </div>
+                </div>
+              </div>
+
+              <!-- AdGuard Home Service -->
+              <div class="p-4 border rounded-md">
+                <div class="flex items-center mb-2">
+                  <input type="checkbox" id="svc_adguard" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                  <label class="ml-2 text-sm font-medium text-gray-900">AdGuard Home <span class="text-xs text-gray-500">(DNS Ad Blocker)</span></label>
+                </div>
+                <div id="adguard-config" class="service-config grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <div class="flex items-center gap-1">
+                      <label class="block text-sm font-medium text-gray-700">AdGuard Subdomain</label>
+                      <div class="group relative inline-block mb-1">
+                        <svg id="icon-help" class="cursor-help" width="20" height="20">
+                          <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                          <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                        </svg>     
+                        <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                          <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                            <p class="text-xs text-blue-700">
+                              <strong>Subdomain</strong> for your <strong>AdGuard</strong> service.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <input type="text" id="adguard_subdomain" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" value="adguard">
+                      <span class="text-gray-500 text-sm base-domain-preview">.example.com</span>
+                    </div>
+                  </div>
+                  <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p class="text-xs text-blue-700">
+                      <strong>Note:</strong> AdGuard Home binds to port 53 for DNS. Make sure no other DNS resolver is running on the server. Firewall ports 53 (TCP/UDP) will be opened automatically.
                     </p>
                   </div>
                 </div>
@@ -275,23 +630,79 @@
             <h3 class="font-medium text-gray-700">Server Connection Settings</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700">Target IP</label>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">Target IP</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          The IP address of your <strong>target machine</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <input type="text" id="target_ip" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="1.2.3.4">
-                <p class="text-xs text-gray-500 mt-1">The server may get a new IP after install. Check your router or use a static/DHCP-reserved address.</p>
+                <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
+                  <p class="text-xs text-blue-700">
+                    <strong>Note:</strong> The server may get a new IP after install. Check your router or use a static/DHCP-reserved address incase connection to the target cannot be established.
+                  </p>
+                </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">SSH User</label>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">SSH User</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Name of the ssh user whose account will be used in order to proceed with the install. <strong>The chosen user requires access to sudo</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <input type="text" id="target_user" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="nixos">
-                <p class="text-xs text-amber-600 mt-1">⚠️ Avoid <code>root</code> — SSH typically blocks it by default. Non-root installs may take significantly longer than root.</p>
+                <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
+                  <p class="text-xs text-blue-700">
+                    <strong>Note:</strong> ⚠️ Avoid <code>root</code> — SSH typically blocks it by default. Any other user with access to sudo will do.
+                  </p>
+                </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">SSH Password</label>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">SSH Password</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Password of the given <strong>SSH User</strong>. It is required in order to copy the SSH key to the server.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <input type="password" id="ssh_password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Required to copy SSH key to server">
               </div>
             </div>
-            <p class="text-sm text-gray-500">The SSH identity file (private key) will be automatically loaded if you generated a new key in the previous step.</p>
+            <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
+              <p class="text-xs text-blue-700">
+                <strong>Note:</strong> The SSH identity file (private key) will be automatically loaded if you generated a new key in the previous step.
+              </p>
+            </div>
           </div>
-
           <div class="flex justify-end pt-6 border-t">
             <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
               Deploy Now
@@ -310,7 +721,22 @@
         <form id="deploy-existing-form" class="space-y-6">
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700">Nix Flake Directory</label>
+              <div class="flex items-center gap-1">
+                <label class="block text-sm font-medium text-gray-700">Nix Flake Directory</label>
+                <div class="group relative inline-block mb-1">
+                  <svg id="icon-help" class="cursor-help" width="20" height="20">
+                    <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                    <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                  </svg>     
+                  <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                      <p class="text-xs text-blue-700">
+                        Path to the directory where <strong>your Nix Flake Configuration files</strong> are stored.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="mt-1 flex rounded-md shadow-sm">
                 <input type="text" id="flake_dir" required class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md sm:text-sm border-gray-300 border" readonly placeholder="Select directory...">
                 <button type="button" id="pick-dir-btn" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm hover:bg-gray-100">
@@ -321,30 +747,122 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-medium text-gray-700">Target IP</label>
-                <input type="text" id="existing_target_ip" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="1.2.3.4">
-                <p class="text-xs text-gray-500 mt-1">The server may get a new IP after install. Check your router or use a static/DHCP-reserved address.</p>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">SSH User</label>
-                <input type="text" id="existing_target_user" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="nixos">
-                <p class="text-xs text-amber-600 mt-1">⚠️ Avoid <code>root</code> — SSH typically blocks it by default. Non-root installs may take significantly longer than root.</p>
-              </div>
-              <div class="md:col-span-2">
-                <div class="flex justify-between items-center mb-1">
-                  <label class="block text-sm font-medium text-gray-700">SSH Identity File (Private Key)</label>
-                  <button type="button" id="existing-generate-key-btn" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Generate New Key</button>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">Target IP</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          The IP address of your <strong>target machine</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <input type="text" id="existing_ssh_identity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="/path/to/private/key (optional)">
-                <p id="existing-key-gen-msg" class="text-xs text-green-600 hidden mt-1"></p>
+                <input type="text" id="existing_target_ip" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="1.2.3.4">
+                <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
+                  <p class="text-xs text-blue-700">
+                    <strong>Note:</strong> The server may get a new IP after install. Check your router or use a static/DHCP-reserved address incase connection to the target cannot be established.
+                  </p>
+                </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">SSH Password</label>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">SSH User</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Name of the ssh user whose account will be used in order to proceed with the install. <strong>The chosen user requires access to sudo</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <input type="text" id="existing_target_user" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="nixos">
+                <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
+                  <p class="text-xs text-blue-700">
+                    <strong>Note:</strong> ⚠️ Avoid <code>root</code> — SSH typically blocks it by default. Any other user with access to sudo will do.
+                  </p>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">SSH Identity File (Private Key)</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Path to your <strong>SSH private key</strong>. It is required in order to copy it onto the target machine.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <input type="text" id="existing_ssh_identity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="/path/to/private/key">
+                <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
+                  <p class="text-xs text-blue-700">
+                    <strong>Note:</strong> If you've generated a private key with this application already, it is likely located here: <code>/home/your_user/.local/share/com.dreamteam.easy-selfhost/ssh/id_ed25519</code>
+                  </p>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">SSH Password</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Password of the given <strong>SSH User</strong>. It is required in order to copy the SSH key to the server.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <input type="password" id="existing_ssh_password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Required to copy SSH key to server">
+              </div>
+              <div>
+                <div class="flex items-center gap-1">
+                  <label class="block text-sm font-medium text-gray-700">Nextcloud Admin Password</label>
+                  <div class="group relative inline-block mb-1">
+                    <svg id="icon-help" class="cursor-help" width="20" height="20">
+                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                    </svg>     
+                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                        <p class="text-xs text-blue-700">
+                          Password to your Nextcloud service.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <input type="password" id="existing_admin_pwd" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="">
+                <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
+                  <p class="text-xs text-blue-700">
+                    <strong>Leave empty if you are not deploying the Nextcloud service.</strong>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-
           <div class="flex justify-end pt-6 border-t">
             <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
               Deploy
@@ -363,21 +881,6 @@
         <div class="flex items-center justify-center py-8" id="progress-indicator">
           <div class="spinner mr-4"></div>
           <p class="text-lg text-gray-600 font-medium" id="progress-status-text">Executing nixos-anywhere...</p>
-        </div>
-
-        <!-- Post-install info: shown only on success -->
-        <div id="post-install-info" class="hidden mb-4 p-4 bg-green-50 border border-green-300 rounded-md space-y-2">
-          <h3 class="text-sm font-semibold text-green-800">✅ Installation complete — what to do next</h3>
-          <p class="text-xs text-green-700">
-            <strong>SSH login:</strong> Connect with the username you specified (e.g. <code>nixos</code>) and the SSH key generated during configuration.<br>
-            Example: <code id="post-install-ssh-example">ssh nixos@&lt;server-ip&gt;</code>
-          </p>
-          <p class="text-xs text-green-700">
-            <strong>Service access:</strong> After the server reboots and gets a network address, access your services via the domains you configured. If you used local/self-signed TLS, accept the certificate warning in your browser. If the domain is not public, make sure your DNS or <code>/etc/hosts</code> points to the server's IP.
-          </p>
-          <p class="text-xs text-amber-700">
-            ⚠️ <strong>IP may have changed:</strong> The server might have received a different IP after install. Check your router's DHCP table or configure a static/reserved address before trying to connect.
-          </p>
         </div>
 
         <!-- Post-install info: shown only on success -->

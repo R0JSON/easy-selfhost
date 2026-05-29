@@ -125,8 +125,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_subdomain", "admin_password"]);
-  setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_hostname", "jellyfin_media_dir"]);
-  setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_hostname"]);
+  setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_subdomain", "jellyfin_media_dir"]);
+  setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_subdomain"]);
+  setupServiceToggle("svc_immich", "immich-config", ["immich_subdomain"]);
+  setupServiceToggle("svc_gitea", "gitea-config", ["gitea_subdomain"]);
+  setupServiceToggle("svc_uptime_kuma", "uptime-kuma-config", ["uptime_kuma_subdomain"]);
+  setupServiceToggle("svc_vikunja", "vikunja-config", ["vikunja_subdomain"]);
+  setupServiceToggle("svc_tailscale", "tailscale-config");
+  setupServiceToggle("svc_adguard", "adguard-config", ["adguard_subdomain"]);
 
   // SSH Key Generation
   const generateKeyBtn = document.querySelector("#generate-key-btn");
@@ -249,6 +255,32 @@ window.addEventListener("DOMContentLoaded", async () => {
       vaultwarden_hostname: vaultwardenEnabled ? `${document.querySelector("#vaultwarden_subdomain").value.trim()}.${baseDomain}` : null,
       vaultwarden_admin_token: vaultwardenEnabled ? (document.querySelector("#vaultwarden_admin_token").value || null) : null,
       vaultwarden_signups_allowed: vaultwardenEnabled ? document.querySelector("#vaultwarden_signups").checked : false,
+
+      // Immich
+      immich_enable: document.querySelector("#svc_immich").checked,
+      immich_hostname: document.querySelector("#svc_immich").checked ? `${document.querySelector("#immich_subdomain").value.trim()}.${baseDomain}` : null,
+      immich_media_dir: document.querySelector("#svc_immich").checked ? document.querySelector("#immich_media_dir").value : null,
+
+      // Gitea
+      gitea_enable: document.querySelector("#svc_gitea").checked,
+      gitea_hostname: document.querySelector("#svc_gitea").checked ? `${document.querySelector("#gitea_subdomain").value.trim()}.${baseDomain}` : null,
+      gitea_app_name: document.querySelector("#svc_gitea").checked ? document.querySelector("#gitea_app_name").value : null,
+
+      // Uptime Kuma
+      uptime_kuma_enable: document.querySelector("#svc_uptime_kuma").checked,
+      uptime_kuma_hostname: document.querySelector("#svc_uptime_kuma").checked ? `${document.querySelector("#uptime_kuma_subdomain").value.trim()}.${baseDomain}` : null,
+
+      // Vikunja
+      vikunja_enable: document.querySelector("#svc_vikunja").checked,
+      vikunja_hostname: document.querySelector("#svc_vikunja").checked ? `${document.querySelector("#vikunja_subdomain").value.trim()}.${baseDomain}` : null,
+
+      // Tailscale
+      tailscale_enable: document.querySelector("#svc_tailscale").checked,
+      tailscale_auth_key: document.querySelector("#svc_tailscale").checked ? (document.querySelector("#tailscale_auth_key").value || null) : null,
+
+      // AdGuard Home
+      adguard_enable: document.querySelector("#svc_adguard").checked,
+      adguard_hostname: document.querySelector("#svc_adguard").checked ? `${document.querySelector("#adguard_subdomain").value.trim()}.${baseDomain}` : null,
     };
   }
 
@@ -300,6 +332,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (config.nextcloud_enable) services.push("Nextcloud");
     if (config.jellyfin_enable) services.push("Jellyfin");
     if (config.vaultwarden_enable) services.push("Vaultwarden");
+    if (config.immich_enable) services.push("Immich");
+    if (config.gitea_enable) services.push("Gitea");
+    if (config.uptime_kuma_enable) services.push("Uptime Kuma");
+    if (config.vikunja_enable) services.push("Vikunja");
+    if (config.tailscale_enable) services.push("Tailscale");
+    if (config.adguard_enable) services.push("AdGuard Home");
     if (services.length == 0) services.push("Base system only");
 
     initProgressScreen(
