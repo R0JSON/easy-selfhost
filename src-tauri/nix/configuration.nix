@@ -26,6 +26,7 @@
 
   services.vaultwarden = {
     enable = {{ vaultwarden_enable }};
+    {{ vaultwarden_env_file }}
     config = {
       DOMAIN = "https://{{ vaultwarden_hostname }}";
       SIGNUPS_ALLOWED = {{ vaultwarden_signups }};
