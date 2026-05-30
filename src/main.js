@@ -294,9 +294,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     e.preventDefault();
     const config = getCreateConfig();
 
-    const services = ["Nextcloud"];
+    const services = [];
+    if (config.nextcloud_enable) services.push("Nextcloud");
     if (config.jellyfin_enable) services.push("Jellyfin");
     if (config.vaultwarden_enable) services.push("Vaultwarden");
+    if (services.length == 0) services.push("Base system only");
 
     initProgressScreen(
       `Deploying Configuration (${services.join(", ")})...`,
