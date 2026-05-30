@@ -265,9 +265,15 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
 }
 
 #[tauri::command]
-async fn save_configuration(_app: tauri::AppHandle, config: DeployConfig, save_path: String) -> Result<DeployResult, String> {
+async fn save_configuration(_app: tauri::AppHandle, config: serde_json::Value, save_path: String) -> Result<DeployResult, String> {
     let deploy_dir = PathBuf::from(save_path);
-    generate_nix_files(&deploy_dir, &config)?;
+    
+    let config_parsed: DeployConfig = match serde_json::from_value(config.clone()) {
+        Ok(c) => c,
+        Err(e) => return Err(format!("Deserialization error for config: {}. Payload: {}", e, config)),
+    };
+
+    generate_nix_files(&deploy_dir, &config_parsed)?;
 
     Ok(DeployResult {
         success: true,
