@@ -196,9 +196,20 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Get Config from Form
   function getCreateConfig() {
+
+    // Checking for enabled services
     const nextcloudEnabled = document.querySelector("#svc_nextcloud").checked;
     const jellyfinEnabled = document.querySelector("#svc_jellyfin").checked;
     const vaultwardenEnabled = document.querySelector("#svc_vaultwarden").checked;
+    const immichEnabled = document.querySelector("#svc_immich").checked;
+    const giteaEnabled = document.querySelector("#svc_gitea").checked;
+    const uptimekumaEnabled = document.querySelector("#svc_uptime_kuma").checked;
+    const vikunjaEnabled = document.querySelector("#svc_vikunja").checked;
+    const tailscaleEnabled = document.querySelector("#svc_tailscale").checked;
+    const adguardEnabled = document.querySelector("#svc_adguard").checked;
+
+
+    // Getting the base domain
     const baseDomain = document.querySelector("#base_domain").value.trim();
 
     return {
@@ -211,10 +222,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       ssh_key: document.querySelector("#ssh_key").value,
       target_device: document.querySelector("#target_device").value,
 
-      // Nextcloud (always enabled)
-      nextcloud_enable: nextcloudEnabled,
-      nextcloud_hostname: nextcloudEnabled ? document.querySelector("#nextcloud_hostname").value : null,
-      admin_password: nextcloudEnabled ?  document.querySelector("#admin_password").value : null,
+      // SSL
       ssl_enable: nextcloudEnabled ?  document.querySelector("#ssl_enable").checked : false,
       acme_email: nextcloudEnabled && document.querySelector("#ssl_enable").checked  ?  document.querySelector("#acme_email").value : null,
 
@@ -239,30 +247,30 @@ window.addEventListener("DOMContentLoaded", async () => {
       vaultwarden_signups_allowed: vaultwardenEnabled ? document.querySelector("#vaultwarden_signups").checked : false,
 
       // Immich
-      immich_enable: document.querySelector("#svc_immich").checked,
-      immich_hostname: document.querySelector("#svc_immich").checked ? `${document.querySelector("#immich_subdomain").value.trim()}.${baseDomain}` : null,
-      immich_media_dir: document.querySelector("#svc_immich").checked ? document.querySelector("#immich_media_dir").value : null,
+      immich_enable: immichEnabled,
+      immich_hostname: immichEnabled ? `${document.querySelector("#immich_subdomain").value.trim()}.${baseDomain}` : null,
+      immich_media_dir: immichEnabled ? document.querySelector("#immich_media_dir").value : null,
 
       // Gitea
-      gitea_enable: document.querySelector("#svc_gitea").checked,
-      gitea_hostname: document.querySelector("#svc_gitea").checked ? `${document.querySelector("#gitea_subdomain").value.trim()}.${baseDomain}` : null,
-      gitea_app_name: document.querySelector("#svc_gitea").checked ? document.querySelector("#gitea_app_name").value : null,
+      gitea_enable: giteaEnabled,
+      gitea_hostname: giteaEnabled ? `${document.querySelector("#gitea_subdomain").value.trim()}.${baseDomain}` : null,
+      gitea_app_name: giteaEnabled ? document.querySelector("#gitea_app_name").value : null,
 
       // Uptime Kuma
-      uptime_kuma_enable: document.querySelector("#svc_uptime_kuma").checked,
-      uptime_kuma_hostname: document.querySelector("#svc_uptime_kuma").checked ? `${document.querySelector("#uptime_kuma_subdomain").value.trim()}.${baseDomain}` : null,
+      uptime_kuma_enable: uptimekumaEnabled,
+      uptime_kuma_hostname: uptimekumaEnabled ? `${document.querySelector("#uptime_kuma_subdomain").value.trim()}.${baseDomain}` : null,
 
       // Vikunja
-      vikunja_enable: document.querySelector("#svc_vikunja").checked,
-      vikunja_hostname: document.querySelector("#svc_vikunja").checked ? `${document.querySelector("#vikunja_subdomain").value.trim()}.${baseDomain}` : null,
+      vikunja_enable: vikunjaEnabled,
+      vikunja_hostname: vikunjaEnabled ? `${document.querySelector("#vikunja_subdomain").value.trim()}.${baseDomain}` : null,
 
       // Tailscale
-      tailscale_enable: document.querySelector("#svc_tailscale").checked,
-      tailscale_auth_key: document.querySelector("#svc_tailscale").checked ? (document.querySelector("#tailscale_auth_key").value || null) : null,
+      tailscale_enable: tailscaleEnabled,
+      tailscale_auth_key: tailscaleEnabled ? (document.querySelector("#tailscale_auth_key").value || null) : null,
 
       // AdGuard Home
-      adguard_enable: document.querySelector("#svc_adguard").checked,
-      adguard_hostname: document.querySelector("#svc_adguard").checked ? `${document.querySelector("#adguard_subdomain").value.trim()}.${baseDomain}` : null,
+      adguard_enable: adguardEnabled,
+      adguard_hostname: adguardEnabled ? `${document.querySelector("#adguard_subdomain").value.trim()}.${baseDomain}` : null,
     };
   }
 
