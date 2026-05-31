@@ -212,10 +212,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Get Config from Form
   function getCreateConfig() {
-    const nextcloudEnabled = document.querySelector("#svc_nextcloud").checked;
+    const nextcloudEnabled= document.querySelector("#svc_nextcloud").checked;
     const jellyfinEnabled = document.querySelector("#svc_jellyfin").checked;
     const vaultwardenEnabled = document.querySelector("#svc_vaultwarden").checked;
-    const baseDomain = document.querySelector("#base_domain").value.trim();
+    
 
     return {
       // Connection (filled in step 2)
