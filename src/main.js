@@ -269,8 +269,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       tailscale_auth_key: tailscaleEnabled ? (document.querySelector("#tailscale_auth_key").value || null) : null,
 
       // AdGuard Home
-      adguard_enable: adguardEnabled,
-      adguard_hostname: adguardEnabled ? `${document.querySelector("#adguard_subdomain").value.trim()}.${baseDomain}` : null,
+      adguardhome_enable: adguardEnabled,
+      adguardhome_hostname: adguardEnabled ? `${document.querySelector("#adguard_subdomain").value.trim()}.${baseDomain}` : null,
     };
   }
 
