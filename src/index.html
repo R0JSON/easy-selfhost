@@ -138,6 +138,11 @@
                 <textarea id="ssh_key" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" rows="2" placeholder="ssh-ed25519 ..."></textarea>
                 <p id="key-gen-msg" class="text-xs text-green-600 hidden mt-1"></p>
                 <input type="hidden" id="ssh_identity_file">
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p class="text-xs text-blue-700">
+                    <strong>What to do with this key:</strong> If you generated a new key, the private key is saved locally and will be used automatically during deployment. The public key shown above will be embedded in the server config so you can connect via SSH after installation. You don't need to copy or upload it manually — the deployment step handles everything.
+                  </p>
+                </div>
               </div>
               <div class="md:col-span-2 border-t pt-4">
                 <div class="flex items-center space-x-3 mb-4">
@@ -354,6 +359,21 @@
         <div class="flex items-center justify-center py-8" id="progress-indicator">
           <div class="spinner mr-4"></div>
           <p class="text-lg text-gray-600 font-medium" id="progress-status-text">Executing nixos-anywhere...</p>
+        </div>
+
+        <!-- Post-install info: shown only on success -->
+        <div id="post-install-info" class="hidden mb-4 p-4 bg-green-50 border border-green-300 rounded-md space-y-2">
+          <h3 class="text-sm font-semibold text-green-800">✅ Installation complete — what to do next</h3>
+          <p class="text-xs text-green-700">
+            <strong>SSH login:</strong> Connect with the username you specified (e.g. <code>nixos</code>) and the SSH key generated during configuration.<br>
+            Example: <code id="post-install-ssh-example">ssh nixos@&lt;server-ip&gt;</code>
+          </p>
+          <p class="text-xs text-green-700">
+            <strong>Service access:</strong> After the server reboots and gets a network address, access your services via the domains you configured. If you used local/self-signed TLS, accept the certificate warning in your browser. If the domain is not public, make sure your DNS or <code>/etc/hosts</code> points to the server's IP.
+          </p>
+          <p class="text-xs text-amber-700">
+            ⚠️ <strong>IP may have changed:</strong> The server might have received a different IP after install. Check your router's DHCP table or configure a static/reserved address before trying to connect.
+          </p>
         </div>
 
         <div class="mt-4 flex-grow flex flex-col min-h-0">
