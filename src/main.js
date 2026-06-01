@@ -101,6 +101,59 @@ window.addEventListener("DOMContentLoaded", async () => {
     baseDomainPreviews.forEach(p => p.textContent = suffix);
   });
 
+
+  // local ip addresses check
+  function isLocalIP(ip){
+    return(
+      /^10\./.test(ip) ||
+      /^192\.168\./.test(ip) ||
+      /^172\.(1[6-9]|2[0-9]|3[01])\./.test(ip) ||
+      /^169\.254\./.test(ip)
+    );
+  }
+  //display local ip warning for target ip
+  const targetIpInput = document.querySelector("#target_ip");
+  const targetIpWarning = document.querySelector("#target-ip-local-warning");
+  targetIpInput.addEventListener("input", () => {
+    const val = targetIpInput.value.trim();
+    if (isLocalIP(val)) {
+      targetIpWarning.classList.remove("hidden");
+
+    } else {
+      targetIpWarning.classList.add("hidden");
+    
+    }
+  });
+
+  // hostname validation
+  const hostnameInput = document.querySelector("#hostname");
+  const hostnameError = document.querySelector("#hostname-error");
+  function validateHostname() { 
+    const val = hostnameInput.value.trim();
+    const isOnlyNumber = /^\d+$/.test(val)
+    if(isOnlyNumber){
+      hostnameError.classList.remove("hidden");
+      hostnameInput.setCustomValidity("Hostname cant be only numbers");
+    } else {
+      hostnameError.classList.add("hidden");
+      hostnameInput.setCustomValidity("");
+    }
+  }
+  hostnameInput.addEventListener("input", validateHostname);
+  hostnameInput.addEventListener("blur", validateHostname);
+
+  // display local ip warning for the deploy target ip
+  const existingTargetIpInput = document.querySelector("#existing_target_ip");
+  const existingTargetIpWarning = document.querySelector("#existing-target-ip-local-warning")
+  existingTargetIpInput.addEventListener("input", () => {
+    const val = existingTargetIpInput.value.trim();
+    if (isLocalIP(val)){
+      existingTargetIpWarning.classList.remove("hidden");
+    } else {
+      existingTargetIpWarning.classList.add("hidden")
+    }
+  });
+
   // Service toggle logic: show/hide config panels when checkboxes are toggled
   function setupServiceToggle(checkboxId, configPanelId, requiredFieldIds = []) {
     const checkbox = document.querySelector(`#${checkboxId}`);
@@ -125,8 +178,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_subdomain", "admin_password"]);
-  setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_hostname", "jellyfin_media_dir"]);
-  setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_hostname"]);
+  setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_subdomain", "jellyfin_media_dir"]);
+  setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_subdomain"]);
   setupServiceToggle("svc_immich", "immich-config", ["immich_subdomain"]);
   setupServiceToggle("svc_gitea", "gitea-config", ["gitea_subdomain"]);
   setupServiceToggle("svc_uptime_kuma", "uptime-kuma-config", ["uptime_kuma_subdomain"]);
@@ -348,7 +401,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (config.uptime_kuma_enable) services.push("Uptime Kuma");
     if (config.vikunja_enable) services.push("Vikunja");
     if (config.tailscale_enable) services.push("Tailscale");
-    if (config.adguardhome_enable) services.push("AdGuard Home");
+    if (config.adguard_enable) services.push("AdGuard Home");
     if (services.length == 0) services.push("Base system only");
 
     initProgressScreen(
