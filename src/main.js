@@ -348,7 +348,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (config.uptime_kuma_enable) services.push("Uptime Kuma");
     if (config.vikunja_enable) services.push("Vikunja");
     if (config.tailscale_enable) services.push("Tailscale");
-    if (config.adguard_enable) services.push("AdGuard Home");
+    if (config.adguardhome_enable) services.push("AdGuard Home");
     if (services.length == 0) services.push("Base system only");
 
     initProgressScreen(
