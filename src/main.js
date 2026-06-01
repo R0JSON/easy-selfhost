@@ -157,6 +157,27 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // SSH Key Generation for Existing Config
+  const existingGenerateKeyBtn = document.querySelector("#existing-generate-key-btn");
+  const existingSshIdentityInput = document.querySelector("#existing_ssh_identity");
+  const existingKeyGenMsg = document.querySelector("#existing-key-gen-msg");
+
+  existingGenerateKeyBtn.addEventListener("click", async () => {
+    try {
+      existingGenerateKeyBtn.disabled = true;
+      existingGenerateKeyBtn.textContent = "Generating...";
+      const result = await invoke("generate_ssh_key");
+      existingSshIdentityInput.value = result.private_key_path;
+      existingKeyGenMsg.textContent = `New key generated! Private key saved at: ${result.private_key_path}`;
+      existingKeyGenMsg.classList.remove("hidden");
+    } catch (err) {
+      alert("Failed to generate key: " + err);
+    } finally {
+      existingGenerateKeyBtn.disabled = false;
+      existingGenerateKeyBtn.textContent = "Generate New Key";
+    }
+  });
+
   // Vaultwarden admin token generator
   const generateVwTokenBtn = document.querySelector("#generate-vw-token-btn");
   const vwTokenInput = document.querySelector("#vaultwarden_admin_token");

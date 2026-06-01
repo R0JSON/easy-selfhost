@@ -784,29 +784,30 @@
                   </p>
                 </div>
               </div>
-              <div>
-                <div class="flex items-center gap-1">
-                  <label class="block text-sm font-medium text-gray-700">SSH Identity File (Private Key)</label>
-                  <div class="group relative inline-block mb-1">
-                    <svg id="icon-help" class="cursor-help" width="20" height="20">
-                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
-                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
-                    </svg>     
-                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
-                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
-                        <p class="text-xs text-blue-700">
-                          Path to your <strong>SSH private key</strong>. It is required in order to copy it onto the target machine.
-                        </p>
+              <div class="md:col-span-2">
+                <div class="flex justify-between items-center mb-1">
+                  <div class="flex items-center gap-1">
+                    <div class="flex justify-between items-center mb-1">
+                      <label class="block text-sm font-medium text-gray-700">SSH Identity File (Private Key)</label>
+                    </div>
+                    <div class="group relative inline-block mb-1">
+                      <svg id="icon-help" class="cursor-help" width="20" height="20">
+                        <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
+                        <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
+                      </svg>     
+                      <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
+                        <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
+                          <p class="text-xs text-blue-700">
+                            Path to your <strong>SSH private key</strong>. It is required in order to copy it onto the target machine.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <button type="button" id="existing-generate-key-btn" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Generate New Key</button>
                 </div>
-                <input type="text" id="existing_ssh_identity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="/path/to/private/key">
-                <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
-                  <p class="text-xs text-blue-700">
-                    <strong>Note:</strong> If you've generated a private key with this application already, it is likely located here: <code>/home/your_user/.local/share/com.dreamteam.easy-selfhost/ssh/id_ed25519</code>
-                  </p>
-                </div>
+                <input type="text" id="existing_ssh_identity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="/path/to/private/key (optional)">
+                <p id="existing-key-gen-msg" class="text-xs text-green-600 hidden mt-1"></p>
               </div>
               <div>
                 <div class="flex items-center gap-1">
@@ -826,30 +827,6 @@
                   </div>
                 </div>
                 <input type="password" id="existing_ssh_password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Required to copy SSH key to server">
-              </div>
-              <div>
-                <div class="flex items-center gap-1">
-                  <label class="block text-sm font-medium text-gray-700">Nextcloud Admin Password</label>
-                  <div class="group relative inline-block mb-1">
-                    <svg id="icon-help" class="cursor-help" width="20" height="20">
-                      <circle class="stroke-blue-200 fill-blue-50" cx="10" cy="10" r="8" stroke-width="1" />
-                      <text class="select-none fill-blue-700" font-size="10" x="10" y="11" dominant-baseline="middle" text-anchor="middle">?</text>
-                    </svg>     
-                    <div class="absolute left-full top-1/2 -translate-y-1/2 pl-1 hidden group-hover:block z-50">    
-                      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 shadow-md w-max max-w-xs sm:max-w-sm break-words whitespace-normal">
-                        <p class="text-xs text-blue-700">
-                          Password to your Nextcloud service.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <input type="password" id="existing_admin_pwd" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="">
-                <div class="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2">
-                  <p class="text-xs text-blue-700">
-                    <strong>Leave empty if you are not deploying the Nextcloud service.</strong>
-                  </p>
-                </div>
               </div>
             </div>
           </div>
