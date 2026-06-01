@@ -31,19 +31,20 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ## 3. Install Nix Packet Manager
 Refer to [Official Nix Documentation](https://nixos.org/download/)
 
-## 4. Restart your shell
-Make sure to restart your shell after installing rust and nix.
-
-## 5. Clone the repo
+## 4. Clone the repo
 ```bash
 git clone https://github.com/R0JSON/easy-selfhost
 cd easy-selfhost
 ```
 
-## 6. Install tauri
+## 5. Install tauri
 ```bash
 sudo npm install -g @tauri-apps/cli
 ```
+
+## 6. Restart your shell
+Make sure to restart your shell after installing required dependencies
+
 ## 7. Run the app
 ```bash
 npm run tauri dev
