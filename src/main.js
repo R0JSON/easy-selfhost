@@ -178,8 +178,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_subdomain", "admin_password"]);
-  setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_subdomain", "jellyfin_media_dir"]);
-  setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_subdomain"]);
+  setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_hostname", "jellyfin_media_dir"]);
+  setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_hostname"]);
   setupServiceToggle("svc_immich", "immich-config", ["immich_subdomain"]);
   setupServiceToggle("svc_gitea", "gitea-config", ["gitea_subdomain"]);
   setupServiceToggle("svc_uptime_kuma", "uptime-kuma-config", ["uptime_kuma_subdomain"]);
@@ -401,7 +401,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (config.uptime_kuma_enable) services.push("Uptime Kuma");
     if (config.vikunja_enable) services.push("Vikunja");
     if (config.tailscale_enable) services.push("Tailscale");
-    if (config.adguard_enable) services.push("AdGuard Home");
+    if (config.adguardhome_enable) services.push("AdGuard Home");
     if (services.length == 0) services.push("Base system only");
 
     initProgressScreen(

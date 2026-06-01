@@ -265,7 +265,7 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
 
     // --- GITEA ---
     let gitea_block = if config.gitea_enable {
-        r#"services.gitea = { enable = true; appName = "Mój Prywatny Skarbiec Kodu"; database.type = "sqlite3"; settings.server.HTTP_PORT = 3000; };"#.to_string()
+        r#"services.gitea = { enable = true; appName = "Mój Prywatny Skarbiec Kodu"; database.type = "sqlite3"; settings.server.HTTP_PORT = 8080; };"#.to_string()
     } else { "".to_string() };
 
     let gitea_nginx_vhost = if config.gitea_enable {
@@ -274,7 +274,7 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
   services.nginx.virtualHosts."{}" = {{
     forceSSL = {};
     enableACME = {};
-    locations."/" = {{ proxyPass = "http://127.0.0.1:3000"; proxyWebsockets = true; }};
+    locations."/" = {{ proxyPass = "http://127.0.0.1:8080"; proxyWebsockets = true; }};
   }};"#, hostname, ssl_enable_str, ssl_enable_str)
     } else { "".to_string() };
 
