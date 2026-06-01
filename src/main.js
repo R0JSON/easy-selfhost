@@ -420,7 +420,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       target_user: document.querySelector("#existing_target_user").value,
       ssh_identity_file: document.querySelector("#existing_ssh_identity").value || null,
       ssh_password: document.querySelector("#existing_ssh_password").value || null,
-      admin_password: document.querySelector("#existing_admin_pwd").value || null,
     };
 
     initProgressScreen("Deploying Existing Configuration...", "Starting nixos-anywhere with existing flake...");
