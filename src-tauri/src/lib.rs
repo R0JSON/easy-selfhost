@@ -38,6 +38,29 @@ struct DeployConfig {
     vaultwarden_hostname: Option<String>,
     vaultwarden_admin_token: Option<String>,
     vaultwarden_signups_allowed: Option<bool>,
+
+    // Immich
+    immich_enable: bool,
+    immich_hostname: Option<String>,
+
+    // Gitea
+    gitea_enable: bool,
+    gitea_hostname: Option<String>,
+
+    // Uptime Kuma
+    uptime_kuma_enable: bool,
+    uptime_kuma_hostname: Option<String>,
+
+    // Vikunja
+    vikunja_enable: bool,
+    vikunja_hostname: Option<String>,
+
+    // Tailscale
+    tailscale_enable: bool,
+
+    // AdGuard Home
+    adguardhome_enable: bool,
+    adguardhome_hostname: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -224,13 +247,96 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
   }};"#, vaultwarden_hostname, ssl_enable_str, ssl_enable_str)
     } else { "".to_string() };
 
+    // --- IMMICH ---
+
+    let immich_block = if config.immich_enable {
+        "services.immich = { enable = true; port = 2283; host = \"127.0.0.1\"; };".to_string()
+    } else { "".to_string() };
+
+    let immich_nginx_vhost = if config.immich_enable {
+        let hostname = config.immich_hostname.as_deref().unwrap_or("");
+        format!(r#"
+  services.nginx.virtualHosts."{}" = {{
+    forceSSL = {};
+    enableACME = {};
+    locations."/" = {{ proxyPass = "http://127.0.0.1:2283"; proxyWebsockets = true; }};
+  }};"#, hostname, ssl_enable_str, ssl_enable_str)
+    } else { "".to_string() };
+
+    // --- GITEA ---
+    let gitea_block = if config.gitea_enable {
+        r#"services.gitea = { enable = true; appName = "Mój Prywatny Skarbiec Kodu"; database.type = "sqlite3"; settings.server.HTTP_PORT = 8080; };"#.to_string()
+    } else { "".to_string() };
+
+    let gitea_nginx_vhost = if config.gitea_enable {
+        let hostname = config.gitea_hostname.as_deref().unwrap_or("");
+        format!(r#"
+  services.nginx.virtualHosts."{}" = {{
+    forceSSL = {};
+    enableACME = {};
+    locations."/" = {{ proxyPass = "http://127.0.0.1:8080"; proxyWebsockets = true; }};
+  }};"#, hostname, ssl_enable_str, ssl_enable_str)
+    } else { "".to_string() };
+
+    // --- UPTIME KUMA ---
+    let uptime_kuma_block = if config.uptime_kuma_enable {
+        r#"services.uptime-kuma = { enable = true; settings = { HOST = "127.0.0.1"; PORT = "3001"; }; };"#.to_string()
+    } else { "".to_string() };
+
+    let uptime_kuma_nginx_vhost = if config.uptime_kuma_enable {
+        let hostname = config.uptime_kuma_hostname.as_deref().unwrap_or("");
+        format!(r#"
+  services.nginx.virtualHosts."{}" = {{
+    forceSSL = {};
+    enableACME = {};
+    locations."/" = {{ proxyPass = "http://127.0.0.1:3001"; proxyWebsockets = true; }};
+  }};"#, hostname, ssl_enable_str, ssl_enable_str)
+    } else { "".to_string() };
+
+    // --- VIKUNJA ---
+    let vikunja_block = if config.vikunja_enable {
+        let hostname = config.vikunja_hostname.as_deref().unwrap_or("vikunja.local");
+        format!(r#"services.vikunja = {{ enable = true; frontendScheme = "https"; frontendHostname = "{}"; port = 3456; settings.service.frontendurl = "https://{}/"; }};"#, hostname, hostname)
+    } else { "".to_string() };
+
+    let vikunja_nginx_vhost = if config.vikunja_enable {
+        let hostname = config.vikunja_hostname.as_deref().unwrap_or("");
+        format!(r#"
+  services.nginx.virtualHosts."{}" = {{
+    forceSSL = {};
+    enableACME = {};
+    locations."/" = {{ proxyPass = "http://127.0.0.1:3456"; proxyWebsockets = true; }};
+  }};"#, hostname, ssl_enable_str, ssl_enable_str)
+    } else { "".to_string() };
+
+    // --- TAILSCALE ---
+    let tailscale_block = if config.tailscale_enable {
+        "services.tailscale.enable = true;".to_string()
+    } else { "".to_string() };
+
+    // --- ADGUARD HOME ---
+    let adguardhome_block = if config.adguardhome_enable {
+        "services.adguardhome = { enable = true; openFirewall = true; };".to_string()
+    } else { "".to_string() };
+
+    let adguardhome_nginx_vhost = if config.adguardhome_enable {
+        let hostname = config.adguardhome_hostname.as_deref().unwrap_or("");
+        format!(r#"
+  services.nginx.virtualHosts."{}" = {{
+    forceSSL = {};
+    enableACME = {};
+    locations."/" = {{ proxyPass = "http://127.0.0.1:3000"; proxyWebsockets = true; }};
+  }};"#, hostname, ssl_enable_str, ssl_enable_str)
+    } else { "".to_string() };
+
+    // --- COMPILE configuration.nix ---
     let configuration = include_str!("../nix/configuration.nix")
         .replace("{{ hostname }}", &config.hostname)
         .replace("{{ ssh_key }}", &config.ssh_key)
-        .replace("{{ nextcloud_block }}", &nextcloud_block)
-        .replace("{{ nextcloud_nginx_vhost }}", &nextcloud_nginx_vhost)
         .replace("{{ ssl_enable }}", ssl_enable_str)
         .replace("{{ acme_config }}", &acme_config)
+        .replace("{{ nextcloud_block }}", &nextcloud_block)
+        .replace("{{ nextcloud_nginx_vhost }}", &nextcloud_nginx_vhost)
         .replace("{{ jellyfin_block }}", &jellyfin_block)
         .replace("{{ jellyfin_nginx_vhost }}", &jellyfin_nginx_vhost)
         .replace("{{ vaultwarden_enable }}", vaultwarden_enable)
@@ -238,7 +344,18 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
         .replace("{{ vaultwarden_hostname }}", vaultwarden_hostname)
         .replace("{{ vaultwarden_signups }}", vaultwarden_signups)
         .replace("{{ vaultwarden_nginx_vhost }}", &vaultwarden_nginx_vhost)
-        ;
+        .replace("{{ immich_block }}", &immich_block)
+        .replace("{{ immich_nginx_vhost }}", &immich_nginx_vhost)
+        .replace("{{ gitea_block }}", &gitea_block)
+        .replace("{{ gitea_nginx_vhost }}", &gitea_nginx_vhost)
+        .replace("{{ uptime_kuma_block }}", &uptime_kuma_block)
+        .replace("{{ uptime_kuma_nginx_vhost }}", &uptime_kuma_nginx_vhost)
+        .replace("{{ vikunja_block }}", &vikunja_block)
+        .replace("{{ vikunja_nginx_vhost }}", &vikunja_nginx_vhost)
+        .replace("{{ tailscale_block }}", &tailscale_block)
+        .replace("{{ adguardhome_block }}", &adguardhome_block)
+        .replace("{{ adguardhome_nginx_vhost }}", &adguardhome_nginx_vhost);
+
     fs::write(deploy_dir.join("configuration.nix"), configuration).map_err(|e| e.to_string())?;
 
     // Generate flake.nix

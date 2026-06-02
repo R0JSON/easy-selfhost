@@ -2,7 +2,7 @@
 
 This template should help get you started developing with Tauri in vanilla HTML, CSS and Javascript.
 
-Install dependencies:
+## 1. Install dependencies:
 ```bash
 sudo apt update && sudo apt install -y \
   build-essential \
@@ -18,24 +18,34 @@ sudo apt update && sudo apt install -y \
   libsoup-3.0-dev \
   libjavascriptcoregtk-4.1-dev \
   nodejs \
-  npm 
+  npm \
+  sshpass
 
 ```
-Clone the repo
+
+## 2. Install rust
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+## 3. Install Nix Packet Manager
+Refer to [Official Nix Documentation](https://nixos.org/download/)
+
+## 4. Clone the repo
 ```bash
 git clone https://github.com/R0JSON/easy-selfhost
 cd easy-selfhost
 ```
 
-Install rust
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-Install tauri
+## 5. Install tauri
 ```bash
 sudo npm install -g @tauri-apps/cli
 ```
-Run the app
+
+## 6. Restart your shell
+Make sure to restart your shell after installing required dependencies
+
+## 7. Run the app
 ```bash
 npm run tauri dev
 ```

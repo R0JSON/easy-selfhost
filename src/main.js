@@ -101,6 +101,59 @@ window.addEventListener("DOMContentLoaded", async () => {
     baseDomainPreviews.forEach(p => p.textContent = suffix);
   });
 
+
+  // local ip addresses check
+  function isLocalIP(ip){
+    return(
+      /^10\./.test(ip) ||
+      /^192\.168\./.test(ip) ||
+      /^172\.(1[6-9]|2[0-9]|3[01])\./.test(ip) ||
+      /^169\.254\./.test(ip)
+    );
+  }
+  //display local ip warning for target ip
+  const targetIpInput = document.querySelector("#target_ip");
+  const targetIpWarning = document.querySelector("#target-ip-local-warning");
+  targetIpInput.addEventListener("input", () => {
+    const val = targetIpInput.value.trim();
+    if (isLocalIP(val)) {
+      targetIpWarning.classList.remove("hidden");
+
+    } else {
+      targetIpWarning.classList.add("hidden");
+    
+    }
+  });
+
+  // hostname validation
+  const hostnameInput = document.querySelector("#hostname");
+  const hostnameError = document.querySelector("#hostname-error");
+  function validateHostname() { 
+    const val = hostnameInput.value.trim();
+    const isOnlyNumber = /^\d+$/.test(val)
+    if(isOnlyNumber){
+      hostnameError.classList.remove("hidden");
+      hostnameInput.setCustomValidity("Hostname cant be only numbers");
+    } else {
+      hostnameError.classList.add("hidden");
+      hostnameInput.setCustomValidity("");
+    }
+  }
+  hostnameInput.addEventListener("input", validateHostname);
+  hostnameInput.addEventListener("blur", validateHostname);
+
+  // display local ip warning for the deploy target ip
+  const existingTargetIpInput = document.querySelector("#existing_target_ip");
+  const existingTargetIpWarning = document.querySelector("#existing-target-ip-local-warning")
+  existingTargetIpInput.addEventListener("input", () => {
+    const val = existingTargetIpInput.value.trim();
+    if (isLocalIP(val)){
+      existingTargetIpWarning.classList.remove("hidden");
+    } else {
+      existingTargetIpWarning.classList.add("hidden")
+    }
+  });
+
   // Service toggle logic: show/hide config panels when checkboxes are toggled
   function setupServiceToggle(checkboxId, configPanelId, requiredFieldIds = []) {
     const checkbox = document.querySelector(`#${checkboxId}`);
@@ -127,6 +180,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupServiceToggle("svc_nextcloud", "nextcloud-config", ["nextcloud_subdomain", "admin_password"]);
   setupServiceToggle("svc_jellyfin", "jellyfin-config", ["jellyfin_hostname", "jellyfin_media_dir"]);
   setupServiceToggle("svc_vaultwarden", "vaultwarden-config", ["vaultwarden_hostname"]);
+  setupServiceToggle("svc_immich", "immich-config", ["immich_subdomain"]);
+  setupServiceToggle("svc_gitea", "gitea-config", ["gitea_subdomain"]);
+  setupServiceToggle("svc_uptime_kuma", "uptime-kuma-config", ["uptime_kuma_subdomain"]);
+  setupServiceToggle("svc_vikunja", "vikunja-config", ["vikunja_subdomain"]);
+  setupServiceToggle("svc_tailscale", "tailscale-config");
+  setupServiceToggle("svc_adguard", "adguard-config", ["adguard_subdomain"]);
 
   // SSH Key Generation
   const generateKeyBtn = document.querySelector("#generate-key-btn");
@@ -211,9 +270,20 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Get Config from Form
   function getCreateConfig() {
+
+    // Checking for enabled services
     const nextcloudEnabled = document.querySelector("#svc_nextcloud").checked;
     const jellyfinEnabled = document.querySelector("#svc_jellyfin").checked;
     const vaultwardenEnabled = document.querySelector("#svc_vaultwarden").checked;
+    const immichEnabled = document.querySelector("#svc_immich").checked;
+    const giteaEnabled = document.querySelector("#svc_gitea").checked;
+    const uptimekumaEnabled = document.querySelector("#svc_uptime_kuma").checked;
+    const vikunjaEnabled = document.querySelector("#svc_vikunja").checked;
+    const tailscaleEnabled = document.querySelector("#svc_tailscale").checked;
+    const adguardEnabled = document.querySelector("#svc_adguard").checked;
+
+
+    // Getting the base domain
     const baseDomain = document.querySelector("#base_domain").value.trim();
 
     return {
@@ -225,8 +295,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       hostname: document.querySelector("#hostname").value,
       ssh_key: document.querySelector("#ssh_key").value,
       target_device: document.querySelector("#target_device").value,
-      ssl_enable: document.querySelector("#ssl_enable").checked,
-      acme_email: document.querySelector("#acme_email").value,
+
+      // SSL
+      ssl_enable: nextcloudEnabled ?  document.querySelector("#ssl_enable").checked : false,
+      acme_email: nextcloudEnabled && document.querySelector("#ssl_enable").checked  ?  document.querySelector("#acme_email").value : null,
 
       // SSH identity
       ssh_identity_file: sshIdentityInput.value || null,
@@ -247,6 +319,32 @@ window.addEventListener("DOMContentLoaded", async () => {
       vaultwarden_hostname: vaultwardenEnabled ? `${document.querySelector("#vaultwarden_subdomain").value.trim()}.${baseDomain}` : null,
       vaultwarden_admin_token: vaultwardenEnabled ? (document.querySelector("#vaultwarden_admin_token").value || null) : null,
       vaultwarden_signups_allowed: vaultwardenEnabled ? document.querySelector("#vaultwarden_signups").checked : false,
+
+      // Immich
+      immich_enable: immichEnabled,
+      immich_hostname: immichEnabled ? `${document.querySelector("#immich_subdomain").value.trim()}.${baseDomain}` : null,
+      immich_media_dir: immichEnabled ? document.querySelector("#immich_media_dir").value : null,
+
+      // Gitea
+      gitea_enable: giteaEnabled,
+      gitea_hostname: giteaEnabled ? `${document.querySelector("#gitea_subdomain").value.trim()}.${baseDomain}` : null,
+      gitea_app_name: giteaEnabled ? document.querySelector("#gitea_app_name").value : null,
+
+      // Uptime Kuma
+      uptime_kuma_enable: uptimekumaEnabled,
+      uptime_kuma_hostname: uptimekumaEnabled ? `${document.querySelector("#uptime_kuma_subdomain").value.trim()}.${baseDomain}` : null,
+
+      // Vikunja
+      vikunja_enable: vikunjaEnabled,
+      vikunja_hostname: vikunjaEnabled ? `${document.querySelector("#vikunja_subdomain").value.trim()}.${baseDomain}` : null,
+
+      // Tailscale
+      tailscale_enable: tailscaleEnabled,
+      tailscale_auth_key: tailscaleEnabled ? (document.querySelector("#tailscale_auth_key").value || null) : null,
+
+      // AdGuard Home
+      adguardhome_enable: adguardEnabled,
+      adguardhome_hostname: adguardEnabled ? `${document.querySelector("#adguard_subdomain").value.trim()}.${baseDomain}` : null,
     };
   }
 
@@ -298,6 +396,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (config.nextcloud_enable) services.push("Nextcloud");
     if (config.jellyfin_enable) services.push("Jellyfin");
     if (config.vaultwarden_enable) services.push("Vaultwarden");
+    if (config.immich_enable) services.push("Immich");
+    if (config.gitea_enable) services.push("Gitea");
+    if (config.uptime_kuma_enable) services.push("Uptime Kuma");
+    if (config.vikunja_enable) services.push("Vikunja");
+    if (config.tailscale_enable) services.push("Tailscale");
+    if (config.adguardhome_enable) services.push("AdGuard Home");
     if (services.length == 0) services.push("Base system only");
 
     initProgressScreen(
