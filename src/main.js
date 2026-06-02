@@ -1,6 +1,24 @@
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
+function validateStrongPassword(password) {
+  if (!password || password.length === 0) {
+    return "Hasło nie może być puste.";
+  }
+  if (password.length < 8) {
+    return `Hasło jest za krótkie (${password.length}/8 znaków). Minimum to 8 znaków.`;
+  }
+  let classes = 0;
+  if (/[a-z]/.test(password)) classes++;
+  if (/[A-Z]/.test(password)) classes++;
+  if (/[0-9]/.test(password)) classes++;
+  if (/[^A-Za-z0-9]/.test(password)) classes++;
+  if (classes < 3) {
+    return "Hasło musi zawierać co najmniej 3 z 4 typów znaków: małe litery, wielkie litery, cyfry, znaki specjalne.";
+  }
+  return null;
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   // Screens
   const screenHome = document.querySelector("#screen-home");
@@ -265,6 +283,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Next step in wizard
   configForm.addEventListener("submit", (e) => {
     e.preventDefault();
+
+        const ncCheckbox = document.querySelector("#svc_nextcloud");
+    if (ncCheckbox && ncCheckbox.checked) {
+      const ncPassInput = document.querySelector("#admin_password");
+      const ncPass = ncPassInput ? ncPassInput.value : "";
+      const error = validateStrongPassword(ncPass);
+      if (error) {
+        alert("Hasło admina Nextcloud jest niewystarczająco silne:\n\n" + error);
+        ncPassInput.focus();
+        return;
+      }
+    }
+
     showScreen(screenDeployTarget);
   });
 
@@ -423,6 +454,19 @@ window.addEventListener("DOMContentLoaded", async () => {
       configForm.reportValidity();
       return;
     }
+
+    const ncCheckbox = document.querySelector("#svc_nextcloud");
+    if (ncCheckbox && ncCheckbox.checked) {
+      const ncPassInput = document.querySelector("#admin_password");
+      const ncPass = ncPassInput ? ncPassInput.value : "";
+      const error = validateStrongPassword(ncPass);
+      if (error) {
+        alert("Hasło admina Nextcloud jest niewystarczająco silne:\n\n" + error);
+        ncPassInput.focus();
+        return;
+      }
+    }
+
     const config = getCreateConfig();
     try {
       const savePath = await invoke('plugin:dialog|open', {
