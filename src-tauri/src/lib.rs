@@ -405,6 +405,22 @@ async fn run_ssh_copy_id(
 
         let _ = app.emit("deploy-progress", "SSH password provided. Attempting to install public key via ssh-copy-id...");
 
+        if let Ok(home) = std::env::var("HOME") {
+            let user_ssh_dir = std::path::PathBuf::from(&home).join(".ssh");
+            if !user_ssh_dir.exists() {
+                let _ = app.emit("deploy-progress", format!("Creating {} (required by ssh-copy-id)...", user_ssh_dir.display()));
+                if let Err(e) = fs::create_dir_all(&user_ssh_dir) {
+                    return Err(format!("Failed to create {}: {}", user_ssh_dir.display(), e));
+                }
+                // chmod 700 — required by ssh-copy-id / openssh
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let _ = fs::set_permissions(&user_ssh_dir, fs::Permissions::from_mode(0o700));
+                }
+            }
+        }
+
         // 1. Copy SSH Key
         let mut cmd = Command::new("sshpass");
         cmd.env("PATH", &combined_path)

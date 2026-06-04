@@ -3,10 +3,10 @@ const { listen } = window.__TAURI__.event;
 
 function validateStrongPassword(password) {
   if (!password || password.length === 0) {
-    return "Hasło nie może być puste.";
+    return "Password can't be empty.";
   }
-  if (password.length < 8) {
-    return `Hasło jest za krótkie (${password.length}/8 znaków). Minimum to 8 znaków.`;
+  if (password.length < 12) {
+    return `Password is too short (${password.length}/12 characters). At least 12 characters.`;
   }
   let classes = 0;
   if (/[a-z]/.test(password)) classes++;
@@ -14,7 +14,7 @@ function validateStrongPassword(password) {
   if (/[0-9]/.test(password)) classes++;
   if (/[^A-Za-z0-9]/.test(password)) classes++;
   if (classes < 3) {
-    return "Hasło musi zawierać co najmniej 3 z 4 typów znaków: małe litery, wielkie litery, cyfry, znaki specjalne.";
+    return "Password must contain at least 3 out of 4 types: lowercase letters, uppercase letters, numbers, special characters.";
   }
   return null;
 }
