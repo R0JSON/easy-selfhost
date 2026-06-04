@@ -14,6 +14,8 @@
 
   networking.firewall.allowedTCPPorts = [ 80 443 8443 53 ];
   networking.firewall.allowedUDPPorts = [ 53 51820 ];
+  networking.nameservers = ["1.1.1.1"];
+  networking.networkmanager.dns = "none";
 
   services.nginx.enable = true;
 

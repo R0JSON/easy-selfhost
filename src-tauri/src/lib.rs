@@ -405,6 +405,22 @@ async fn run_ssh_copy_id(
 
         let _ = app.emit("deploy-progress", "SSH password provided. Attempting to install public key via ssh-copy-id...");
 
+        if let Ok(home) = std::env::var("HOME") {
+            let user_ssh_dir = std::path::PathBuf::from(&home).join(".ssh");
+            if !user_ssh_dir.exists() {
+                let _ = app.emit("deploy-progress", format!("Creating {} (required by ssh-copy-id)...", user_ssh_dir.display()));
+                if let Err(e) = fs::create_dir_all(&user_ssh_dir) {
+                    return Err(format!("Failed to create {}: {}", user_ssh_dir.display(), e));
+                }
+                // chmod 700 — required by ssh-copy-id / openssh
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let _ = fs::set_permissions(&user_ssh_dir, fs::Permissions::from_mode(0o700));
+                }
+            }
+        }
+
         // 1. Copy SSH Key
         let mut cmd = Command::new("sshpass");
         cmd.env("PATH", &combined_path)
@@ -412,7 +428,7 @@ async fn run_ssh_copy_id(
             .arg("-e")
             .arg("ssh-copy-id")
             .arg("-o")
-            .arg("StrictHostKeyChecking=no")
+            .arg("StrictHostKeyChecking=accept-new")
             .arg("-o")
             .arg("IdentitiesOnly=yes")
             .arg("-o")
@@ -456,7 +472,7 @@ async fn run_ssh_copy_id(
                 .arg("-e")
                 .arg("ssh")
                 .arg("-o")
-                .arg("StrictHostKeyChecking=no")
+                .arg("StrictHostKeyChecking=accept-new")
                 .arg("-o")
                 .arg("IdentitiesOnly=yes")
                 .arg("-o")
@@ -524,7 +540,9 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
          .arg("--extra-files")
          .arg(deploy_dir.join("extra-files"))
          .arg("--ssh-option")
-         .arg("IdentitiesOnly=yes");
+         .arg("IdentitiesOnly=yes")
+         .arg("--ssh-option")
+         .arg("StrictHostKeyChecking=accept-new");
 
     let default_key = app.path().app_data_dir().unwrap_or_default().join("ssh/id_ed25519");
     let identity = if let Some(ref id) = config.ssh_identity_file {
@@ -656,7 +674,9 @@ async fn deploy_existing(app: tauri::AppHandle, config: ExistingDeployConfig) ->
          .arg("--flake")
          .arg(flake_arg)
          .arg("--ssh-option")
-         .arg("IdentitiesOnly=yes");
+         .arg("IdentitiesOnly=yes")
+         .arg("--ssh-option")
+         .arg("StrictHostKeyChecking=accept-new");
 
     // Automatically detect and pass extra-files if the folder exists in the flake directory
     let extra_files_path = deploy_dir.join("extra-files");

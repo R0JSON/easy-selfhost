@@ -1,6 +1,24 @@
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
+function validateStrongPassword(password) {
+  if (!password || password.length === 0) {
+    return "Password can't be empty.";
+  }
+  if (password.length < 12) {
+    return `Password is too short (${password.length}/12 characters). At least 12 characters.`;
+  }
+  let classes = 0;
+  if (/[a-z]/.test(password)) classes++;
+  if (/[A-Z]/.test(password)) classes++;
+  if (/[0-9]/.test(password)) classes++;
+  if (/[^A-Za-z0-9]/.test(password)) classes++;
+  if (classes < 3) {
+    return "Password must contain at least 3 out of 4 types: lowercase letters, uppercase letters, numbers, special characters.";
+  }
+  return null;
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   // Screens
   const screenHome = document.querySelector("#screen-home");
@@ -265,6 +283,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Next step in wizard
   configForm.addEventListener("submit", (e) => {
     e.preventDefault();
+
+        const ncCheckbox = document.querySelector("#svc_nextcloud");
+    if (ncCheckbox && ncCheckbox.checked) {
+      const ncPassInput = document.querySelector("#admin_password");
+      const ncPass = ncPassInput ? ncPassInput.value : "";
+      const error = validateStrongPassword(ncPass);
+      if (error) {
+        alert("The Nextcloud admin password is not strong enough:\n\n" + error);
+        ncPassInput.focus();
+        return;
+      }
+    }
+
     showScreen(screenDeployTarget);
   });
 
@@ -423,6 +454,19 @@ window.addEventListener("DOMContentLoaded", async () => {
       configForm.reportValidity();
       return;
     }
+
+    const ncCheckbox = document.querySelector("#svc_nextcloud");
+    if (ncCheckbox && ncCheckbox.checked) {
+      const ncPassInput = document.querySelector("#admin_password");
+      const ncPass = ncPassInput ? ncPassInput.value : "";
+      const error = validateStrongPassword(ncPass);
+      if (error) {
+        alert("The Nextcloud admin password is not strong enough:\n\n" + error);
+        ncPassInput.focus();
+        return;
+      }
+    }
+
     const config = getCreateConfig();
     try {
       const savePath = await invoke('plugin:dialog|open', {
