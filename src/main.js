@@ -290,7 +290,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       const ncPass = ncPassInput ? ncPassInput.value : "";
       const error = validateStrongPassword(ncPass);
       if (error) {
-        alert("Hasło admina Nextcloud jest niewystarczająco silne:\n\n" + error);
+        alert("The Nextcloud admin password is not strong enough:\n\n" + error);
         ncPassInput.focus();
         return;
       }
@@ -461,7 +461,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       const ncPass = ncPassInput ? ncPassInput.value : "";
       const error = validateStrongPassword(ncPass);
       if (error) {
-        alert("Hasło admina Nextcloud jest niewystarczająco silne:\n\n" + error);
+        alert("The Nextcloud admin password is not strong enough:\n\n" + error);
         ncPassInput.focus();
         return;
       }
