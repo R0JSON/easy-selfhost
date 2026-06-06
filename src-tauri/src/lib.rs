@@ -17,7 +17,7 @@ struct DeployConfig {
     ssh_key: String,
     target_device: String,
     ssl_enable: bool,
-    acme_email: String,
+    acme_email: Option<String>,
 
     // Nextcloud
     nextcloud_enable: bool,
@@ -160,7 +160,7 @@ fn generate_nix_files(deploy_dir: &PathBuf, config: &DeployConfig) -> Result<(),
     let acme_config = if config.ssl_enable {
         format!(
             "security.acme = {{ acceptTerms = true; defaults.email = \"{}\"; }};",
-            config.acme_email
+            config.acme_email.as_deref().unwrap_or("")
         )
     } else {
         "".to_string()

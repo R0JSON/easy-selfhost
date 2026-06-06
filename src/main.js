@@ -52,6 +52,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const progressTitle = document.querySelector("#progress-title");
   const progressIndicator = document.querySelector("#progress-indicator");
   const progressStatusText = document.querySelector("#progress-status-text");
+  const progressLoginText = document.querySelector("#progress-login-text")
   const progressLogs = document.querySelector("#progress-logs");
   const spinner = document.querySelector(".spinner");
 
@@ -383,6 +384,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     progressTitle.textContent = title;
     progressStatusText.textContent = statusText;
     progressStatusText.className = "text-lg text-gray-600 font-medium";
+    progressLoginText.className = "md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2 hidden";
     progressLogs.textContent = "";
     progressLogs.appendChild(document.createTextNode("Waiting for output...\n"));
     // Keep the classes set in index.html instead of overwriting them
@@ -408,6 +410,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       progressTitle.textContent = "Deployment Successful";
       progressStatusText.textContent = "Completed without errors.";
       progressStatusText.className = "text-lg text-green-600 font-medium";
+      progressLoginText.className = "md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md mt-2"
       progressLogs.textContent += "\n" + message;
     } else {
       progressTitle.textContent = "Deployment Failed";
