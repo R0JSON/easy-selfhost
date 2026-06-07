@@ -761,6 +761,7 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    setup_env();
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -774,4 +775,43 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn setup_env() {
+    let path = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
+    let mut paths: Vec<std::path::PathBuf> = std::env::split_paths(&path).collect();
+
+    let extra_paths = [
+        "/run/current-system/sw/bin",
+        "/nix/var/nix/profiles/default/bin",
+        "/usr/local/bin",
+        "/usr/local/sbin",
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin",
+    ];
+
+    let mut changed = false;
+    for p in extra_paths {
+        let path_buf = std::path::PathBuf::from(p);
+        if !paths.contains(&path_buf) {
+            paths.insert(0, path_buf);
+            changed = true;
+        }
+    }
+
+    if let Ok(home) = std::env::var("HOME") {
+        let nix_profile = std::path::PathBuf::from(home).join(".nix-profile/bin");
+        if !paths.contains(&nix_profile) {
+            paths.insert(0, nix_profile);
+            changed = true;
+        }
+    }
+
+    if changed {
+        if let Ok(new_path) = std::env::join_paths(paths) {
+            std::env::set_var("PATH", new_path);
+        }
+    }
 }
