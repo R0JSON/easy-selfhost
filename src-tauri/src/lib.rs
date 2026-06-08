@@ -6,6 +6,14 @@ use std::path::PathBuf;
 use tauri::{Manager, Emitter};
 use serde::{Deserialize, Serialize};
 
+fn system_command(cmd: &str) -> Command {
+    let mut c = Command::new(cmd);
+    // Remove LD_LIBRARY_PATH to prevent AppImage bundled libraries
+    // from interfering with system binaries (e.g., nix, ssh).
+    c.env_remove("LD_LIBRARY_PATH");
+    c
+}
+
 #[derive(Deserialize)]
 struct DeployConfig {
     // Connection
@@ -95,11 +103,11 @@ struct DependenciesResult {
 
 #[tauri::command]
 async fn check_dependencies() -> DependenciesResult {
-    let nix = Command::new("nix").arg("--version").output().is_ok();
-    let ssh = Command::new("ssh").arg("-V").output().is_ok();
-    let sshpass = Command::new("sshpass").arg("-V").output().is_ok();
-    let cpio = Command::new("cpio").arg("--version").output().is_ok();
-    let git = Command::new("git").arg("--version").output().is_ok();
+    let nix = system_command("nix").arg("--version").output().is_ok();
+    let ssh = system_command("ssh").arg("-V").output().is_ok();
+    let sshpass = system_command("sshpass").arg("-V").output().is_ok();
+    let cpio = system_command("cpio").arg("--version").output().is_ok();
+    let git = system_command("git").arg("--version").output().is_ok();
 
     DependenciesResult {
         nix,
@@ -124,7 +132,7 @@ async fn generate_ssh_key(app: tauri::AppHandle) -> Result<SshKeyResult, String>
         fs::remove_file(ssh_dir.join("id_ed25519.pub")).ok();
     }
 
-    let output = Command::new("ssh-keygen")
+    let output = system_command("ssh-keygen")
         .arg("-t")
         .arg("ed25519")
         .arg("-f")
@@ -422,7 +430,7 @@ async fn run_ssh_copy_id(
         }
 
         // 1. Copy SSH Key
-        let mut cmd = Command::new("sshpass");
+        let mut cmd = system_command("sshpass");
         cmd.env("PATH", &combined_path)
             .env("SSHPASS", password)
             .arg("-e")
@@ -466,7 +474,7 @@ async fn run_ssh_copy_id(
                 pwd=password, user=target_user
             );
 
-            let mut sudo_setup = Command::new("sshpass");
+            let mut sudo_setup = system_command("sshpass");
             sudo_setup.env("PATH", combined_path)
                 .env("SSHPASS", password)
                 .arg("-e")
@@ -518,7 +526,7 @@ async fn deploy(app: tauri::AppHandle, config: DeployConfig) -> Result<DeployRes
     let _ = app.emit("deploy-progress", "Starting NixOS-Anywhere deployment. This may take several minutes...");
 
     // Run nixos-anywhere
-     let mut cmd = Command::new("nix");
+     let mut cmd = system_command("nix");
      let flake_path = deploy_dir.canonicalize().map_err(|e| e.to_string())?;
      let flake_arg = format!("{}#{}", flake_path.display(), config.hostname);
      
@@ -634,7 +642,7 @@ async fn deploy_existing(app: tauri::AppHandle, config: ExistingDeployConfig) ->
     let _ = app.emit("deploy-progress", "Detecting NixOS configuration from flake.nix...");
 
     // Automatically detect the configuration name from flake.nix
-    let show_output = Command::new("nix")
+    let show_output = system_command("nix")
         .args(["--extra-experimental-features", "nix-command flakes", "flake", "show", "--json"])
         .current_dir(&deploy_dir)
         .output()
@@ -655,7 +663,7 @@ async fn deploy_existing(app: tauri::AppHandle, config: ExistingDeployConfig) ->
     let _ = app.emit("deploy-progress", format!("Detected configuration: {}", config_name));
     let _ = app.emit("deploy-progress", "Starting NixOS-Anywhere deployment. This may take several minutes...");
 
-     let mut cmd = Command::new("nix");
+     let mut cmd = system_command("nix");
      let flake_arg = format!(".#{}", config_name);
      
      let path_env = std::env::var("PATH").unwrap_or_else(|_| "".to_string());
